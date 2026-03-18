@@ -66,4 +66,36 @@ http.route({
   }),
 });
 
+// ── Download proxy ───────────────────────────────────────────────
+// Fetches a render URL server-side and returns it with Content-Disposition: attachment
+// so the browser saves it to disk instead of opening it.
+
+http.route({
+  path: "/api/download",
+  method: "GET",
+  handler: httpAction(async (_ctx, request) => {
+    const urlParam = new URL(request.url).searchParams.get("url");
+    if (!urlParam) return new Response("Missing url", { status: 400 });
+
+    let res: Response;
+    try {
+      res = await fetch(urlParam);
+    } catch {
+      return new Response("Fetch failed", { status: 502 });
+    }
+    if (!res.ok) return new Response("Upstream error", { status: 502 });
+
+    const blob = await res.blob();
+    const filename = decodeURIComponent(urlParam.split("/").pop()?.split("?")[0] ?? "render.mp4");
+
+    return new Response(blob, {
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }),
+});
+
 export default http;

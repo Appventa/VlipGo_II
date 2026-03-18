@@ -26,19 +26,17 @@ export function OrderDetailPage() {
   async function handleDownload(url: string, filename = "vlipgo-render.mp4") {
     setDownloading(true);
     try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
+      const proxyUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/api/download?url=${encodeURIComponent(url)}`;
       const a = document.createElement("a");
-      a.href = objectUrl;
+      a.href = proxyUrl;
       a.download = filename;
       a.style.display = "none";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
     } finally {
-      setDownloading(false);
+      // Small delay so the download starts before spinner disappears
+      setTimeout(() => setDownloading(false), 1500);
     }
   }
 
