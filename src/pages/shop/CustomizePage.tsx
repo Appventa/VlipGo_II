@@ -14,6 +14,7 @@ export function CustomizePage() {
   const navigate = useNavigate();
   const template = useQuery(api.templates.getById, { templateId: id as Id<"templates"> });
   const createJob = useMutation(api.jobs.create);
+  const generateUploadUrl = useMutation(api.jobs.generateUploadUrl);
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
@@ -30,15 +31,12 @@ export function CustomizePage() {
   async function handleImageUpload(fieldId: string, file: File) {
     setUploading((prev) => ({ ...prev, [fieldId]: true }));
     try {
-      const res = await fetch(`${import.meta.env.VITE_CONVEX_URL}/api/storage/generate-upload-url`, {
+      const uploadUrl = await generateUploadUrl();
+      const uploadRes = await fetch(uploadUrl, {
         method: "POST",
+        body: file,
+        headers: { "Content-Type": file.type },
       });
-      // Use Convex storage upload via generateUploadUrl from templates (reuse same endpoint)
-      // We'll use a direct Convex file upload approach
-      const uploadRes = await fetch(
-        `https://${new URL(import.meta.env.VITE_CONVEX_URL).hostname}/api/storage`,
-        { method: "POST", body: file, headers: { "Content-Type": file.type } }
-      );
       if (!uploadRes.ok) throw new Error("Upload failed");
       const { storageId } = await uploadRes.json();
       setValue(fieldId, storageId);
