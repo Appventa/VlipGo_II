@@ -45,6 +45,7 @@ export function AdminNewTemplatePage() {
   // HQ final nexrender fields
   const [finalId, setFinalId] = useState("");
   const [finalComp, setFinalComp] = useState("");
+  const [previewVideoUrl, setPreviewVideoUrl] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [fields, setFields] = useState<FieldDraft[]>([emptyField(0)]);
@@ -65,6 +66,7 @@ export function AdminNewTemplatePage() {
     setPreviewComp(existing.nexrenderCompositionName ?? "");
     setFinalId(existing.nexrenderFinalComposition ?? "");
     setFinalComp(existing.nexrenderFinalCompositionName ?? "");
+    setPreviewVideoUrl(existing.previewVideoUrl ?? "");
     setIsPublished(existing.isPublished);
     setThumbnailUrl(existing.thumbnailUrl ?? "");
     setFields(existing.fields.map((f) => ({
@@ -112,6 +114,7 @@ export function AdminNewTemplatePage() {
         nexrenderCompositionName: previewComp || undefined,
         nexrenderFinalComposition: finalId || undefined,
         nexrenderFinalCompositionName: finalComp || undefined,
+        previewVideoUrl: previewVideoUrl || undefined,
         isPublished,
         thumbnailUrl: thumbnailUrl || undefined,
         fields,
@@ -177,6 +180,17 @@ export function AdminNewTemplatePage() {
               <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="text-sm text-gray-400" />
               {uploading && <span className="text-xs text-blue-400">Uploading…</span>}
               {thumbnailUrl && !uploading && <span className="text-xs text-green-400">✓ Thumbnail saved</span>}
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-300">Preview Video URL</label>
+              <input
+                type="url"
+                value={previewVideoUrl}
+                onChange={(e) => setPreviewVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=... or direct .mp4 URL"
+                className="block w-full rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-600"
+              />
+              <p className="text-xs text-gray-600">YouTube must be set to <span className="text-gray-500">Unlisted</span> (not Private) for embedding to work.</p>
             </div>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="rounded" />

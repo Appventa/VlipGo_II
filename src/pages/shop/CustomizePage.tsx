@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -20,6 +20,12 @@ export function CustomizePage() {
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const ytId = useMemo(() => {
+    if (!template?.previewVideoUrl) return null;
+    const m = template.previewVideoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }, [template?.previewVideoUrl]);
 
   if (template === undefined) return <ShopLayout><Loading /></ShopLayout>;
   if (!template) return <ShopLayout><div className="py-20 text-center text-gray-500">Template not found.</div></ShopLayout>;
@@ -78,6 +84,21 @@ export function CustomizePage() {
   return (
     <ShopLayout>
       <div className="max-w-xl mx-auto">
+        {template.previewVideoUrl && (
+          <div className="aspect-video bg-[#1a1a1a] rounded-xl overflow-hidden mb-6">
+            {ytId ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${ytId}`}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <video src={template.previewVideoUrl} controls className="w-full h-full object-cover" />
+            )}
+          </div>
+        )}
+
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">Customize: {template.title}</h1>
           <p className="text-gray-400 mt-1">Fill in your details below. We'll render a quick preview first.</p>

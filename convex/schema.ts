@@ -23,6 +23,7 @@ export default defineSchema({
     nexrenderCompositionName: v.optional(v.string()), // LQ preview AE composition name
     nexrenderFinalComposition: v.optional(v.string()),     // HQ final nexrender template ID
     nexrenderFinalCompositionName: v.optional(v.string()), // HQ final AE composition name
+    previewVideoUrl: v.optional(v.string()),
     isPublished: v.boolean(),
     isArchived: v.boolean(),
   })

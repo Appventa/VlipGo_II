@@ -8,6 +8,11 @@ import { Button } from "../../components/ui/Button";
 import { formatPrice } from "../../lib/utils";
 import { useConvexAuth } from "convex/react";
 
+function getYouTubeEmbedId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 export function TemplateDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useConvexAuth();
@@ -18,12 +23,23 @@ export function TemplateDetailPage() {
   if (template === undefined) return <ShopLayout><Loading /></ShopLayout>;
   if (!template) return <ShopLayout><div className="py-20 text-center text-gray-500">Template not found.</div></ShopLayout>;
 
+  const ytId = template.previewVideoUrl ? getYouTubeEmbedId(template.previewVideoUrl) : null;
+
   return (
     <ShopLayout>
       <div className="max-w-3xl mx-auto">
-        {/* Thumbnail */}
+        {/* Preview: video > thumbnail > placeholder */}
         <div className="aspect-video bg-[#1a1a1a] rounded-xl overflow-hidden mb-8">
-          {template.thumbnailUrl ? (
+          {template.previewVideoUrl && ytId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${ytId}`}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : template.previewVideoUrl ? (
+            <video src={template.previewVideoUrl} controls className="w-full h-full object-cover" />
+          ) : template.thumbnailUrl ? (
             <img src={template.thumbnailUrl} alt={template.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-600">No preview</div>
