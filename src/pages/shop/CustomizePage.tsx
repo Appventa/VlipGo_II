@@ -88,7 +88,7 @@ export function CustomizePage() {
           <div className="aspect-video bg-[#1a1a1a] rounded-xl overflow-hidden mb-6">
             {ytId ? (
               <iframe
-                src={`https://www.youtube.com/embed/${ytId}`}
+                src={`https://www.youtube.com/embed/${ytId}?controls=0&rel=0&modestbranding=1`}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
