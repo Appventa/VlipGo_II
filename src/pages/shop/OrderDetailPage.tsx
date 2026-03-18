@@ -21,6 +21,22 @@ export function OrderDetailPage() {
   const job = useQuery(api.jobs.getById, { jobId: jobId as Id<"jobs"> });
   const approvePreview = useMutation(api.jobs.approvePreview);
   const [approving, setApproving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload(url: string, filename = "vlipgo-render.mp4") {
+    setDownloading(true);
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   if (job === undefined) return <ShopLayout><Loading /></ShopLayout>;
   if (!job) return <ShopLayout><div className="py-20 text-center text-gray-500">Order not found.</div></ShopLayout>;
@@ -113,15 +129,14 @@ export function OrderDetailPage() {
 
           {/* Download button */}
           {isDone && job.outputUrl && (
-            <a
-              href={job.outputUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+            <button
+              onClick={() => handleDownload(job.outputUrl!, `${job.template?.title ?? "render"}.mp4`)}
+              disabled={downloading}
+              className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-lg transition-colors"
             >
-              <Download size={18} />
-              Download MP4
-            </a>
+              {downloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+              {downloading ? "Preparing download…" : "Download MP4"}
+            </button>
           )}
 
           {isError && (
