@@ -113,6 +113,8 @@ export const upsert = mutation({
     thumbnailUrl: v.optional(v.string()),
     nexrenderComposition: v.string(),
     nexrenderCompositionName: v.optional(v.string()),
+    nexrenderFinalComposition: v.optional(v.string()),
+    nexrenderFinalCompositionName: v.optional(v.string()),
     isPublished: v.boolean(),
     fields: v.array(
       v.object({

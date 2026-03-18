@@ -19,8 +19,10 @@ export default defineSchema({
     price: v.number(),
     currency: v.string(),
     thumbnailUrl: v.optional(v.string()),
-    nexrenderComposition: v.string(),   // nexrender template ID
-    nexrenderCompositionName: v.optional(v.string()), // AE composition name
+    nexrenderComposition: v.string(),         // LQ preview nexrender template ID
+    nexrenderCompositionName: v.optional(v.string()), // LQ preview AE composition name
+    nexrenderFinalComposition: v.optional(v.string()),     // HQ final nexrender template ID
+    nexrenderFinalCompositionName: v.optional(v.string()), // HQ final AE composition name
     isPublished: v.boolean(),
     isArchived: v.boolean(),
   })

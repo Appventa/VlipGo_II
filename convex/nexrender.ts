@@ -37,17 +37,24 @@ export const dispatch = internalAction({
       })
       .filter((a): a is NonNullable<typeof a> => a !== null);
 
+    // Pick LQ preview or HQ final nexrender template
+    const templateId = preview
+      ? job.template.nexrenderComposition
+      : (job.template.nexrenderFinalComposition ?? job.template.nexrenderComposition);
+    const compositionName = preview
+      ? (job.template.nexrenderCompositionName ?? "main")
+      : (job.template.nexrenderFinalCompositionName ?? job.template.nexrenderCompositionName ?? "main");
+
     const body = {
       template: {
-        id: job.template.nexrenderComposition,
-        composition: job.template.nexrenderCompositionName ?? "main",
+        id: templateId,
+        composition: compositionName,
       },
       assets,
-      preview,
       webhook: {
         url: callbackUrl,
         method: "POST",
-        data: { jobId, isPreview: preview },
+        data: { jobId },
       },
     };
 

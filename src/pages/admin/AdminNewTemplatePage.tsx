@@ -39,8 +39,12 @@ export function AdminNewTemplatePage() {
   const [tags, setTags] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
-  const [composition, setComposition] = useState("");
-  const [compositionName, setCompositionName] = useState("");
+  // LQ preview nexrender fields
+  const [previewId, setPreviewId] = useState("");
+  const [previewComp, setPreviewComp] = useState("");
+  // HQ final nexrender fields
+  const [finalId, setFinalId] = useState("");
+  const [finalComp, setFinalComp] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [fields, setFields] = useState<FieldDraft[]>([emptyField(0)]);
@@ -57,8 +61,10 @@ export function AdminNewTemplatePage() {
     setTags(existing.tags.join(", "));
     setPrice(String(existing.price));
     setCurrency(existing.currency);
-    setComposition(existing.nexrenderComposition);
-    setCompositionName(existing.nexrenderCompositionName ?? "");
+    setPreviewId(existing.nexrenderComposition);
+    setPreviewComp(existing.nexrenderCompositionName ?? "");
+    setFinalId(existing.nexrenderFinalComposition ?? "");
+    setFinalComp(existing.nexrenderFinalCompositionName ?? "");
     setIsPublished(existing.isPublished);
     setThumbnailUrl(existing.thumbnailUrl ?? "");
     setFields(existing.fields.map((f) => ({
@@ -88,7 +94,7 @@ export function AdminNewTemplatePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!title || !category || !composition || !price) {
+    if (!title || !category || !previewId || !price) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -102,8 +108,10 @@ export function AdminNewTemplatePage() {
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
         price: Math.round(parseFloat(price) * 100),
         currency,
-        nexrenderComposition: composition,
-        nexrenderCompositionName: compositionName || undefined,
+        nexrenderComposition: previewId,
+        nexrenderCompositionName: previewComp || undefined,
+        nexrenderFinalComposition: finalId || undefined,
+        nexrenderFinalCompositionName: finalComp || undefined,
         isPublished,
         thumbnailUrl: thumbnailUrl || undefined,
         fields,
@@ -164,10 +172,6 @@ export function AdminNewTemplatePage() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input id="composition" label="Nexrender Template ID *" value={composition} onChange={(e) => setComposition(e.target.value)} required placeholder="e.g. 01KM17B27C6WY65ZRVF91GFBV8" />
-              <Input id="compositionName" label="Composition Name *" value={compositionName} onChange={(e) => setCompositionName(e.target.value)} placeholder="e.g. TestCompHD" />
-            </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Thumbnail</label>
               <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="text-sm" />
@@ -178,6 +182,58 @@ export function AdminNewTemplatePage() {
               <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="rounded" />
               <span className="font-medium text-gray-700">Publish immediately</span>
             </label>
+          </div>
+
+          {/* Nexrender Templates */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4">
+            <h2 className="font-semibold text-gray-700">Nexrender Templates</h2>
+            <p className="text-xs text-gray-400">Two separate nexrender templates are needed — one rendered in LQ for the customer preview, one in full HQ for the final download.</p>
+
+            {/* LQ Preview */}
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex flex-col gap-3">
+              <p className="text-sm font-semibold text-amber-700">LQ Preview Template</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  id="previewId"
+                  label="Nexrender Template ID *"
+                  value={previewId}
+                  onChange={(e) => setPreviewId(e.target.value)}
+                  required
+                  placeholder="e.g. 01KM17B27C6WY65ZRVF91GFBV8"
+                />
+                <Input
+                  id="previewComp"
+                  label="AE Composition Name"
+                  value={previewComp}
+                  onChange={(e) => setPreviewComp(e.target.value)}
+                  placeholder="e.g. TestCompHD_Preview"
+                />
+              </div>
+            </div>
+
+            {/* HQ Final */}
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex flex-col gap-3">
+              <p className="text-sm font-semibold text-green-700">HQ Final Template</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  id="finalId"
+                  label="Nexrender Template ID"
+                  value={finalId}
+                  onChange={(e) => setFinalId(e.target.value)}
+                  placeholder="e.g. 01KM17B27C6WY65ZRVF91GFBV9"
+                />
+                <Input
+                  id="finalComp"
+                  label="AE Composition Name"
+                  value={finalComp}
+                  onChange={(e) => setFinalComp(e.target.value)}
+                  placeholder="e.g. TestCompHD"
+                />
+              </div>
+              {!finalId && (
+                <p className="text-xs text-green-600">⚠ If left empty, the LQ preview template will be used as fallback for HD renders.</p>
+              )}
+            </div>
           </div>
 
           {/* Fields */}
