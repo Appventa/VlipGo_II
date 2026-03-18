@@ -1,4 +1,4 @@
-import { action, internalMutation, internalQuery } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
@@ -6,7 +6,7 @@ const NEXRENDER_API = "https://api.nexrender.com/api/v2/jobs";
 
 // ── Dispatch a render job to nexrender cloud ────────────────────
 
-export const dispatch = action({
+export const dispatch = internalAction({
   args: { jobId: v.id("jobs") },
   handler: async (ctx, { jobId }) => {
     const job = await ctx.runQuery(internal.nexrender.getJobForDispatch, { jobId });
