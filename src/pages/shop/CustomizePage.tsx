@@ -79,12 +79,12 @@ export function CustomizePage() {
     <ShopLayout>
       <div className="max-w-xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Customize: {template.title}</h1>
-          <p className="text-gray-500 mt-1">Fill in your details below. We'll render a quick preview first.</p>
+          <h1 className="text-2xl font-bold text-white">Customize: {template.title}</h1>
+          <p className="text-gray-400 mt-1">Fill in your details below. We'll render a quick preview first.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-5">
+          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6 flex flex-col gap-5">
             {template.fields.map((field) => (
               <div key={field._id}>
                 {field.type === "TEXT" && (
@@ -99,7 +99,7 @@ export function CustomizePage() {
 
                 {field.type === "COLOR" && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-gray-300">
                       {field.label}{field.required ? " *" : ""}
                     </label>
                     <div className="flex items-center gap-3">
@@ -107,16 +107,16 @@ export function CustomizePage() {
                         type="color"
                         value={values[field._id] ?? "#000000"}
                         onChange={(e) => setValue(field._id, e.target.value)}
-                        className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
+                        className="h-10 w-16 rounded border border-white/[0.12] cursor-pointer bg-transparent"
                       />
-                      <span className="text-sm text-gray-500 font-mono">{values[field._id] ?? "#000000"}</span>
+                      <span className="text-sm text-gray-400 font-mono">{values[field._id] ?? "#000000"}</span>
                     </div>
                   </div>
                 )}
 
                 {field.type === "IMAGE" && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-gray-300">
                       {field.label}{field.required ? " *" : ""}
                     </label>
                     <input
@@ -132,11 +132,11 @@ export function CustomizePage() {
                           handleImageUpload(field._id, file);
                         }
                       }}
-                      className="text-sm"
+                      className="text-sm text-gray-400"
                     />
-                    {uploading[field._id] && <span className="text-xs text-blue-500">Uploading…</span>}
+                    {uploading[field._id] && <span className="text-xs text-blue-400">Uploading…</span>}
                     {values[field._id] && !uploading[field._id] && (
-                      <span className="text-xs text-green-600">✓ Image ready</span>
+                      <span className="text-xs text-green-400">✓ Image ready</span>
                     )}
                   </div>
                 )}
@@ -144,14 +144,14 @@ export function CustomizePage() {
             ))}
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <div className="bg-blue-50 rounded-xl border border-blue-100 p-4 flex items-center justify-between">
+          <div className="bg-blue-600/10 rounded-xl border border-blue-500/20 p-4 flex items-center justify-between">
             <div>
-              <p className="font-semibold text-gray-900">{template.title}</p>
-              <p className="text-sm text-gray-500">One-time payment</p>
+              <p className="font-semibold text-white">{template.title}</p>
+              <p className="text-sm text-gray-400">One-time payment</p>
             </div>
-            <span className="text-2xl font-bold text-blue-600">
+            <span className="text-2xl font-bold text-blue-400">
               {formatPrice(template.price, template.currency)}
             </span>
           </div>

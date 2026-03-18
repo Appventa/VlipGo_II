@@ -20,10 +20,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      <aside className="w-56 bg-gray-900 text-white flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-700">
-          <span className="font-bold text-lg">VlipGo Admin</span>
+    <div className="min-h-screen flex bg-[#0f0f0f]">
+      <aside className="w-56 bg-[#141414] border-r border-white/[0.06] text-white flex flex-col">
+        <div className="h-16 flex items-center px-6 border-b border-white/[0.06]">
+          <span className="font-bold text-lg tracking-tight">
+            Vlip<span className="text-blue-500">Go</span>
+            <span className="text-gray-500 text-sm font-normal ml-1.5">admin</span>
+          </span>
         </div>
         <nav className="flex-1 py-4">
           {navItems.map(({ to, label, icon: Icon, exact }) => {
@@ -34,7 +37,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 to={to}
                 className={cn(
                   "flex items-center gap-3 px-6 py-3 text-sm transition-colors",
-                  active ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-800"
+                  active ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
                 )}
               >
                 <Icon size={16} />
@@ -45,7 +48,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </nav>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-6 py-4 text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors border-t border-gray-700"
+          className="flex items-center gap-3 px-6 py-4 text-sm text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors border-t border-white/[0.06]"
         >
           <LogOut size={16} />
           Sign out

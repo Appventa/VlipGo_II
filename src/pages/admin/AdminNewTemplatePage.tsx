@@ -141,20 +141,20 @@ export function AdminNewTemplatePage() {
   return (
     <AdminLayout>
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">{id ? "Edit Template" : "New Template"}</h1>
+        <h1 className="text-2xl font-bold text-white mb-6">{id ? "Edit Template" : "New Template"}</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* Metadata */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-700">Template Info</h2>
+          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6 flex flex-col gap-4">
+            <h2 className="font-semibold text-gray-300">Template Info</h2>
             <Input id="title" label="Title *" value={title} onChange={(e) => setTitle(e.target.value)} required />
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Description</label>
+              <label className="text-sm font-medium text-gray-300">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-600"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -164,8 +164,8 @@ export function AdminNewTemplatePage() {
             <div className="grid grid-cols-2 gap-4">
               <Input id="price" label="Price (e.g. 29.99) *" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Currency</label>
-                <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                <label className="text-sm font-medium text-gray-300">Currency</label>
+                <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="block w-full rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                   <option value="GBP">GBP</option>
@@ -173,25 +173,25 @@ export function AdminNewTemplatePage() {
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Thumbnail</label>
-              <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="text-sm" />
-              {uploading && <span className="text-xs text-blue-500">Uploading…</span>}
-              {thumbnailUrl && !uploading && <span className="text-xs text-green-600">✓ Thumbnail saved</span>}
+              <label className="text-sm font-medium text-gray-300">Thumbnail</label>
+              <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="text-sm text-gray-400" />
+              {uploading && <span className="text-xs text-blue-400">Uploading…</span>}
+              {thumbnailUrl && !uploading && <span className="text-xs text-green-400">✓ Thumbnail saved</span>}
             </div>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="rounded" />
-              <span className="font-medium text-gray-700">Publish immediately</span>
+              <span className="font-medium text-gray-300">Publish immediately</span>
             </label>
           </div>
 
           {/* Nexrender Templates */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-700">Nexrender Templates</h2>
-            <p className="text-xs text-gray-400">Two separate nexrender templates are needed — one rendered in LQ for the customer preview, one in full HQ for the final download.</p>
+          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6 flex flex-col gap-4">
+            <h2 className="font-semibold text-gray-300">Nexrender Templates</h2>
+            <p className="text-xs text-gray-500">Two separate nexrender templates are needed — one rendered in LQ for the customer preview, one in full HQ for the final download.</p>
 
             {/* LQ Preview */}
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex flex-col gap-3">
-              <p className="text-sm font-semibold text-amber-700">LQ Preview Template</p>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.07] p-4 flex flex-col gap-3">
+              <p className="text-sm font-semibold text-amber-400">LQ Preview Template</p>
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   id="previewId"
@@ -212,8 +212,8 @@ export function AdminNewTemplatePage() {
             </div>
 
             {/* HQ Final */}
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex flex-col gap-3">
-              <p className="text-sm font-semibold text-green-700">HQ Final Template</p>
+            <div className="rounded-lg border border-green-500/30 bg-green-500/[0.07] p-4 flex flex-col gap-3">
+              <p className="text-sm font-semibold text-green-400">HQ Final Template</p>
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   id="finalId"
@@ -231,46 +231,46 @@ export function AdminNewTemplatePage() {
                 />
               </div>
               {!finalId && (
-                <p className="text-xs text-green-600">⚠ If left empty, the LQ preview template will be used as fallback for HD renders.</p>
+                <p className="text-xs text-green-400/80">⚠ If left empty, the LQ preview template will be used as fallback for HD renders.</p>
               )}
             </div>
           </div>
 
           {/* Fields */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-700">Customization Fields</h2>
+              <h2 className="font-semibold text-gray-300">Customization Fields</h2>
               <Button type="button" variant="secondary" size="sm" onClick={addField}>
                 <Plus size={14} className="mr-1" /> Add Field
               </Button>
             </div>
             <div className="flex flex-col gap-3">
               {fields.map((f, i) => (
-                <div key={i} className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
-                  <GripVertical size={16} className="mt-2 text-gray-300 flex-shrink-0" />
+                <div key={i} className="flex items-start gap-2 p-3 bg-[#242424] rounded-lg">
+                  <GripVertical size={16} className="mt-2 text-gray-600 flex-shrink-0" />
                   <div className="flex-1 grid grid-cols-2 gap-2">
                     <input
                       placeholder="Label *"
                       value={f.label}
                       onChange={(e) => updateField(i, { label: e.target.value })}
-                      className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="rounded border border-white/[0.12] bg-[#1a1a1a] text-white px-2 py-1 text-sm placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <input
                       placeholder="AE Layer name *"
                       value={f.nexrenderLayer}
                       onChange={(e) => updateField(i, { nexrenderLayer: e.target.value })}
-                      className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="rounded border border-white/[0.12] bg-[#1a1a1a] text-white px-2 py-1 text-sm placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <select
                       value={f.type}
                       onChange={(e) => updateField(i, { type: e.target.value as FieldType })}
-                      className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="rounded border border-white/[0.12] bg-[#1a1a1a] text-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value="TEXT">TEXT</option>
                       <option value="IMAGE">IMAGE</option>
                       <option value="COLOR">COLOR</option>
                     </select>
-                    <label className="flex items-center gap-1 text-sm">
+                    <label className="flex items-center gap-1 text-sm text-gray-300">
                       <input type="checkbox" checked={f.required} onChange={(e) => updateField(i, { required: e.target.checked })} />
                       Required
                     </label>
@@ -283,7 +283,7 @@ export function AdminNewTemplatePage() {
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
           <div className="flex gap-3">
             <Button type="submit" loading={loading} size="lg">{id ? "Save Changes" : "Create Template"}</Button>

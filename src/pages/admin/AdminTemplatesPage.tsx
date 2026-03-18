@@ -20,7 +20,7 @@ export function AdminTemplatesPage() {
   return (
     <AdminLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Templates</h1>
+        <h1 className="text-2xl font-bold text-white">Templates</h1>
         <Link to="/admin/templates/new">
           <Button size="sm">
             <Plus size={14} className="mr-1" /> New Template
@@ -31,32 +31,32 @@ export function AdminTemplatesPage() {
       {templates === undefined ? (
         <Loading />
       ) : templates.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">No templates yet. Create your first one.</div>
+        <div className="text-center py-20 text-gray-600">No templates yet. Create your first one.</div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-[#141414] border-b border-white/[0.08]">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Title</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Price</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-400">Title</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-400">Category</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-400">Price</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-400">Status</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/[0.05]">
               {templates.map((t) => (
-                <tr key={t._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{t.title}</td>
+                <tr key={t._id} className="hover:bg-white/[0.03]">
+                  <td className="px-4 py-3 font-medium text-white">{t.title}</td>
                   <td className="px-4 py-3 text-gray-500">{t.category}</td>
                   <td className="px-4 py-3 text-gray-500">{formatPrice(t.price, t.currency)}</td>
                   <td className="px-4 py-3">
                     {t.isArchived ? (
-                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Archived</span>
+                      <span className="text-xs bg-white/[0.08] text-gray-500 px-2 py-0.5 rounded-full">Archived</span>
                     ) : t.isPublished ? (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Published</span>
+                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Published</span>
                     ) : (
-                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Draft</span>
+                      <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">Draft</span>
                     )}
                   </td>
                   <td className="px-4 py-3">

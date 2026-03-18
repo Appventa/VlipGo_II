@@ -29,9 +29,9 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Create your account</h1>
+    <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center px-4">
+      <div className="w-full max-w-sm bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-8">
+        <h1 className="text-2xl font-bold text-white mb-6">Create your account</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
             id="name"
@@ -60,14 +60,14 @@ export function RegisterPage() {
             autoComplete="new-password"
             placeholder="••••••••"
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
           <Button type="submit" loading={loading} size="lg" className="mt-2">
             Create account
           </Button>
         </form>
         <p className="mt-6 text-sm text-center text-gray-500">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 hover:underline font-medium">
+          <Link to="/login" className="text-blue-400 hover:underline font-medium">
             Sign in
           </Link>
         </p>

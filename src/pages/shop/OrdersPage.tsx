@@ -9,11 +9,11 @@ import { cn } from "../../lib/utils";
 import { Play, Loader2, X } from "lucide-react";
 
 const statusColor: Record<string, string> = {
-  QUEUED: "bg-gray-100 text-gray-600",
-  RENDERING: "bg-blue-100 text-blue-700",
-  PREVIEW_READY: "bg-amber-100 text-amber-700",
-  DONE: "bg-green-100 text-green-700",
-  ERROR: "bg-red-100 text-red-700",
+  QUEUED: "bg-white/[0.08] text-gray-400",
+  RENDERING: "bg-blue-500/20 text-blue-400",
+  PREVIEW_READY: "bg-amber-500/20 text-amber-400",
+  DONE: "bg-green-500/20 text-green-400",
+  ERROR: "bg-red-500/20 text-red-400",
 };
 
 const statusLabel: Record<string, string> = {
@@ -64,14 +64,14 @@ export function OrdersPage() {
 
   return (
     <ShopLayout>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">My Orders</h1>
 
       {jobs === undefined ? (
         <Loading />
       ) : jobs.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-gray-600">
           No orders yet.{" "}
-          <Link to="/templates" className="text-blue-600 hover:underline">Browse templates →</Link>
+          <Link to="/templates" className="text-blue-400 hover:underline">Browse templates →</Link>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -83,8 +83,8 @@ export function OrdersPage() {
               <div
                 key={job._id}
                 className={cn(
-                  "bg-white rounded-xl border p-4 transition-shadow",
-                  isPreviewReady ? "border-amber-200 shadow-sm" : "border-gray-200 hover:shadow-sm"
+                  "bg-[#1a1a1a] rounded-xl border p-4 transition-colors",
+                  isPreviewReady ? "border-amber-500/30" : "border-white/[0.08] hover:border-white/[0.14]"
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -93,8 +93,8 @@ export function OrdersPage() {
                     onClick={() => navigate(`/orders/${job._id}`)}
                     className="text-left flex-1 min-w-0 mr-3"
                   >
-                    <p className="font-semibold text-gray-900 truncate">{job.templateTitle}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="font-semibold text-white truncate">{job.templateTitle}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">
                       {new Date(job._creationTime).toLocaleDateString()}
                     </p>
                   </button>
@@ -102,7 +102,7 @@ export function OrdersPage() {
                   {/* Right: badge + actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {job.renderStatus === "RENDERING" && (
-                      <span className="text-xs text-blue-500">{job.renderProgress}%</span>
+                      <span className="text-xs text-blue-400">{job.renderProgress}%</span>
                     )}
                     <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", statusColor[job.renderStatus])}>
                       {statusLabel[job.renderStatus] ?? job.renderStatus}
@@ -112,11 +112,11 @@ export function OrdersPage() {
 
                 {/* Preview actions row */}
                 {isPreviewReady && (
-                  <div className="mt-3 pt-3 border-t border-amber-100 flex gap-2">
+                  <div className="mt-3 pt-3 border-t border-amber-500/20 flex gap-2">
                     {job.previewUrl && (
                       <button
                         onClick={() => setWatchUrl(job.previewUrl!)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-colors"
                       >
                         <Play size={14} /> Watch Preview
                       </button>
@@ -124,7 +124,7 @@ export function OrdersPage() {
                     <button
                       onClick={() => handleApprove(job._id)}
                       disabled={isApproving}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-900 hover:bg-gray-700 disabled:opacity-60 text-white transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-white text-gray-900 hover:bg-gray-200 disabled:opacity-60 transition-colors"
                     >
                       {isApproving ? <Loader2 size={14} className="animate-spin" /> : null}
                       {isApproving ? "Submitting…" : "Render HD →"}

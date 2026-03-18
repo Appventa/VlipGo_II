@@ -63,7 +63,7 @@ export function OrderDetailPage() {
         <div className="flex items-center gap-3 mb-6">
           <StatusIcon status={job.renderStatus} />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{job.template?.title ?? "Your Order"}</h1>
+            <h1 className="text-2xl font-bold text-white">{job.template?.title ?? "Your Order"}</h1>
             <p className="text-sm text-gray-500">Order ID: {job._id.slice(-8).toUpperCase()}</p>
           </div>
         </div>
@@ -71,20 +71,20 @@ export function OrderDetailPage() {
         {/* Status card */}
         <div className={cn(
           "rounded-xl border p-6 mb-6",
-          isDone ? "bg-green-50 border-green-200" :
-          isError ? "bg-red-50 border-red-200" :
-          isPreviewReady ? "bg-amber-50 border-amber-200" :
-          "bg-white border-gray-200"
+          isDone ? "bg-green-500/10 border-green-500/30" :
+          isError ? "bg-red-500/10 border-red-500/30" :
+          isPreviewReady ? "bg-amber-500/10 border-amber-500/30" :
+          "bg-[#1a1a1a] border-white/[0.08]"
         )}>
           <div className="flex items-center justify-between mb-4">
-            <span className="font-semibold text-gray-700">Render Status</span>
+            <span className="font-semibold text-gray-300">Render Status</span>
             <span className={cn(
               "text-sm font-medium px-3 py-1 rounded-full",
-              isDone ? "bg-green-100 text-green-700" :
-              isError ? "bg-red-100 text-red-700" :
-              isPreviewReady ? "bg-amber-100 text-amber-700" :
-              isRendering ? "bg-blue-100 text-blue-700" :
-              "bg-gray-100 text-gray-600"
+              isDone ? "bg-green-500/20 text-green-400" :
+              isError ? "bg-red-500/20 text-red-400" :
+              isPreviewReady ? "bg-amber-500/20 text-amber-400" :
+              isRendering ? "bg-blue-500/20 text-blue-400" :
+              "bg-white/[0.08] text-gray-400"
             )}>
               {isPreviewReady ? "Preview Ready" : job.renderStatus}
             </span>
@@ -97,7 +97,7 @@ export function OrderDetailPage() {
                 <span>{isRendering ? "Rendering…" : "Queued — waiting for renderer"}</span>
                 <span>{job.renderProgress}%</span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500 rounded-full transition-all duration-500"
                   style={{ width: `${job.renderProgress}%` }}
@@ -109,7 +109,7 @@ export function OrderDetailPage() {
           {/* Preview player + approve button */}
           {isPreviewReady && job.previewUrl && (
             <div className="flex flex-col gap-4">
-              <p className="text-sm text-amber-700">
+              <p className="text-sm text-amber-300">
                 Your preview is ready! Watch it below, then approve to render the full HD version.
               </p>
               <video
@@ -142,21 +142,21 @@ export function OrderDetailPage() {
           )}
 
           {isError && (
-            <div className="text-sm text-red-600">
+            <div className="text-sm text-red-400">
               <p className="font-medium mb-1">Render failed</p>
-              <p className="text-red-500">{job.errorMessage ?? "Unknown error. Please contact support."}</p>
+              <p className="text-red-400/80">{job.errorMessage ?? "Unknown error. Please contact support."}</p>
             </div>
           )}
         </div>
 
         {/* What you submitted */}
         {job.assets.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="font-semibold text-gray-700 mb-3">Your Customizations</h2>
-            <ul className="flex flex-col gap-2 text-sm text-gray-600">
+          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-5">
+            <h2 className="font-semibold text-gray-300 mb-3">Your Customizations</h2>
+            <ul className="flex flex-col gap-2 text-sm text-gray-400">
               {job.assets.map((a) => (
                 <li key={a._id} className="flex gap-2">
-                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-600">•</span>
                   <span className="break-all">{a.value}</span>
                 </li>
               ))}
@@ -165,7 +165,7 @@ export function OrderDetailPage() {
         )}
 
         <div className="mt-6 text-center">
-          <Link to="/orders" className="text-sm text-blue-600 hover:underline">← All orders</Link>
+          <Link to="/orders" className="text-sm text-blue-400 hover:underline">← All orders</Link>
         </div>
       </div>
     </ShopLayout>
