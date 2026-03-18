@@ -18,24 +18,30 @@ export const dispatch = internalAction({
     const siteUrl = process.env.CONVEX_SITE_URL;
     const callbackUrl = `${siteUrl}/api/nexrender-callback`;
 
-    const assets = job.assets
-      .map((asset: { fieldId: string; value: string }) => {
-        const field = job.fields.find(
-          (f: { _id: string; type: string; nexrenderLayer: string }) => f._id === asset.fieldId
-        );
-        if (!field) return null;
-        if (field.type === "TEXT") {
-          return { type: "text", layerName: field.nexrenderLayer, value: asset.value };
-        }
-        if (field.type === "COLOR") {
-          return { type: "data", layerName: field.nexrenderLayer, value: asset.value };
-        }
-        if (field.type === "IMAGE") {
-          return { type: "image", layerName: field.nexrenderLayer, src: asset.value };
-        }
-        return null;
-      })
-      .filter((a): a is NonNullable<typeof a> => a !== null);
+    // Resolve IMAGE storage IDs to real URLs before building the assets array
+    const assets = (
+      await Promise.all(
+        job.assets.map(async (asset: { fieldId: string; value: string }) => {
+          const field = job.fields.find(
+            (f: { _id: string; type: string; nexrenderLayer: string }) => f._id === asset.fieldId
+          );
+          if (!field) return null;
+          if (field.type === "TEXT") {
+            return { type: "text", layerName: field.nexrenderLayer, value: asset.value };
+          }
+          if (field.type === "COLOR") {
+            return { type: "data", layerName: field.nexrenderLayer, value: asset.value };
+          }
+          if (field.type === "IMAGE") {
+            // asset.value is a Convex storage ID — resolve to a real URL
+            const url = await ctx.storage.getUrl(asset.value as Parameters<typeof ctx.storage.getUrl>[0]);
+            if (!url) return null;
+            return { type: "image", layerName: field.nexrenderLayer, src: url };
+          }
+          return null;
+        })
+      )
+    ).filter((a): a is NonNullable<typeof a> => a !== null);
 
     // Pick LQ preview or HQ final nexrender template
     const templateId = preview
