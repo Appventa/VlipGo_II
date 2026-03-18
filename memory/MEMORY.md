@@ -72,45 +72,48 @@ Self-serve video customization SaaS. Customers browse After Effects templates, f
 
 ## Progress & Milestones
 
-### Phase 0 — Setup ⬜
-- [ ] Project scaffolded (Vite + React + TS)
-- [ ] Convex initialized and schema deployed
-- [ ] Tailwind configured
-- [ ] Git connected to https://github.com/Appventa/VlipGo_II.git
-- [ ] Vercel connected
+### Phase 0 — Setup ✅
+- [x] Project scaffolded (Vite + React + TS)
+- [x] Convex initialized and schema deployed
+- [x] Tailwind configured
+- [x] Git connected to https://github.com/Appventa/VlipGo_II.git
+- [x] Vercel connected and deploying from main
 
-### Phase 1 — Auth ⬜
-- [ ] Convex Auth (password provider) configured
-- [ ] Register / Login pages functional
-- [ ] Role claim in JWT, ADMIN seeding
+### Phase 1 — Auth ✅
+- [x] Convex Auth (password provider) configured
+- [x] Register / Login / AdminLogin pages functional
+- [x] Role enforcement — ProtectedRoute + Convex mutation layer
+- [ ] ADMIN user seeding (manual: edit role in Convex dashboard)
 
-### Phase 2 — Templates (Admin) ⬜
-- [ ] Admin layout + sidebar
-- [ ] Template CRUD with field builder
-- [ ] Thumbnail upload via Convex storage
+### Phase 2 — Templates (Admin) ✅
+- [x] Admin layout + sidebar
+- [x] Template CRUD with field builder
+- [x] Thumbnail upload via Convex storage
 
-### Phase 3 — Shop (Customer) ⬜
-- [ ] TemplatesPage (grid, filter, search)
-- [ ] TemplateDetailPage
-- [ ] CustomizePage (dynamic form + image upload)
+### Phase 3 — Shop (Customer) ✅
+- [x] TemplatesPage (grid, filter, search)
+- [x] TemplateDetailPage
+- [x] CustomizePage (dynamic form + image upload)
+- [x] OrdersPage + OrderDetailPage (real-time progress bar + download)
 
-### Phase 4 — Payments ⬜
-- [ ] Stripe Checkout Session created on job submit
-- [ ] Stripe webhook HTTP action (PAID → dispatch)
-- [ ] Idempotency on stripePaymentIntentId
+### Phase 4 — Payments ⏭ Bypassed for dev
+- [x] Jobs created as PAID immediately (Stripe bypassed)
+- [ ] Stripe Checkout — add when ready for production
 
 ### Phase 5 — Rendering ⬜
-- [ ] Nexrender job dispatch (payload contract)
-- [ ] jobs:updateRenderProgress mutation (server API key)
-- [ ] OrderDetailPage real-time progress bar + download
+- [x] jobs:updateRenderProgress mutation (server API key auth)
+- [x] Admin jobs oversight table (sort/filter/retry)
+- [ ] Nexrender dispatch — pending first test template from client
+- [ ] convex/nexrender.ts HTTP action + callback endpoint
 
 ### Phase 6 — Polish ⬜
-- [ ] Edge-case handling (failed payments, render errors, retries)
-- [ ] Admin jobs oversight table (sort/filter/retry)
+- [ ] Stripe payment integration (re-enable when going live)
 - [ ] 24h PENDING job expiry (scheduled action)
+- [ ] Admin dashboard stats
 
 ---
 
 ## Key Decisions Log
 - **2026-03-18** — Hard reset git history, new repo VlipGo_II. Starting clean from PRD.
-- **2026-03-18** — Using `writing-plans` → `subagent-driven-development` skill workflow.
+- **2026-03-18** — Stripe bypassed for dev; jobs go straight to PAID+QUEUED.
+- **2026-03-18** — Nexrender integration deferred until first AE test template is ready.
