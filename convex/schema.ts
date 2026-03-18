@@ -19,7 +19,8 @@ export default defineSchema({
     price: v.number(),
     currency: v.string(),
     thumbnailUrl: v.optional(v.string()),
-    nexrenderComposition: v.string(),
+    nexrenderComposition: v.string(),   // nexrender template ID
+    nexrenderCompositionName: v.optional(v.string()), // AE composition name
     isPublished: v.boolean(),
     isArchived: v.boolean(),
   })
@@ -51,6 +52,7 @@ export default defineSchema({
       v.literal("ERROR")
     ),
     renderProgress: v.number(),
+    nexrenderJobId: v.optional(v.string()),
     outputUrl: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
   })

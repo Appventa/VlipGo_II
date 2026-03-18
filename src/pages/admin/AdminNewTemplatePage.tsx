@@ -40,6 +40,7 @@ export function AdminNewTemplatePage() {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [composition, setComposition] = useState("");
+  const [compositionName, setCompositionName] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [fields, setFields] = useState<FieldDraft[]>([emptyField(0)]);
@@ -57,6 +58,7 @@ export function AdminNewTemplatePage() {
     setPrice(String(existing.price));
     setCurrency(existing.currency);
     setComposition(existing.nexrenderComposition);
+    setCompositionName(existing.nexrenderCompositionName ?? "");
     setIsPublished(existing.isPublished);
     setThumbnailUrl(existing.thumbnailUrl ?? "");
     setFields(existing.fields.map((f) => ({
@@ -101,6 +103,7 @@ export function AdminNewTemplatePage() {
         price: Math.round(parseFloat(price) * 100),
         currency,
         nexrenderComposition: composition,
+        nexrenderCompositionName: compositionName || undefined,
         isPublished,
         thumbnailUrl: thumbnailUrl || undefined,
         fields,
@@ -161,7 +164,10 @@ export function AdminNewTemplatePage() {
                 </select>
               </div>
             </div>
-            <Input id="composition" label="Nexrender Composition path/URL *" value={composition} onChange={(e) => setComposition(e.target.value)} required />
+            <div className="grid grid-cols-2 gap-4">
+              <Input id="composition" label="Nexrender Template ID *" value={composition} onChange={(e) => setComposition(e.target.value)} required placeholder="e.g. 01KM17B27C6WY65ZRVF91GFBV8" />
+              <Input id="compositionName" label="Composition Name *" value={compositionName} onChange={(e) => setCompositionName(e.target.value)} placeholder="e.g. TestCompHD" />
+            </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Thumbnail</label>
               <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="text-sm" />

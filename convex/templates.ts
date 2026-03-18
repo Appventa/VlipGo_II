@@ -100,6 +100,7 @@ export const upsert = mutation({
     currency: v.string(),
     thumbnailUrl: v.optional(v.string()),
     nexrenderComposition: v.string(),
+    nexrenderCompositionName: v.optional(v.string()),
     isPublished: v.boolean(),
     fields: v.array(
       v.object({

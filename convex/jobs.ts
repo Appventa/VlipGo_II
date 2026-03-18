@@ -1,6 +1,7 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { internal } from "./_generated/api";
 
 // ── Customer mutations ──────────────────────────────────────────
 
@@ -47,13 +48,16 @@ export const create = mutation({
       )
     );
 
+    // Dispatch to nexrender
+    await ctx.scheduler.runAfter(0, internal.nexrender.dispatch, { jobId });
+
     return jobId;
   },
 });
 
-// ── Render progress (called by Nexrender worker) ────────────────
+// ── Render progress — called by nexrender callback ──────────────
 
-export const updateRenderProgress = mutation({
+export const updateRenderProgress = internalMutation({
   args: {
     jobId: v.id("jobs"),
     progress: v.number(),
@@ -91,6 +95,7 @@ export const retryRender = mutation({
       errorMessage: undefined,
       outputUrl: undefined,
     });
+    await ctx.scheduler.runAfter(0, internal.nexrender.dispatch, { jobId });
   },
 });
 
