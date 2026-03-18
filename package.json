@@ -10,17 +10,18 @@
     "convex:dev": "convex dev"
   },
   "dependencies": {
-    "convex": "^1.17.0",
     "@convex-dev/auth": "^0.0.75",
+    "@stripe/stripe-js": "^4.8.0",
+    "clsx": "^2.1.1",
+    "convex": "^1.17.0",
+    "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
-    "zod": "^3.23.8",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.468.0",
-    "@stripe/stripe-js": "^4.8.0"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

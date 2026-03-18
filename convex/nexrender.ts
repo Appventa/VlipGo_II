@@ -1,4 +1,4 @@
-import { action, internalMutation } from "./_generated/server";
+import { action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
@@ -9,7 +9,6 @@ const NEXRENDER_API = "https://api.nexrender.com/api/v2/jobs";
 export const dispatch = action({
   args: { jobId: v.id("jobs") },
   handler: async (ctx, { jobId }) => {
-    // Fetch job + template + assets
     const job = await ctx.runQuery(internal.nexrender.getJobForDispatch, { jobId });
     if (!job) throw new Error(`Job ${jobId} not found`);
 
@@ -19,22 +18,24 @@ export const dispatch = action({
     const siteUrl = process.env.CONVEX_SITE_URL;
     const callbackUrl = `${siteUrl}/api/nexrender-callback`;
 
-    // Build assets array from jobAssets + templateFields
-    const assets = job.assets.map((asset) => {
-      const field = job.fields.find((f) => f._id === asset.fieldId);
-      if (!field) return null;
-      const fieldType = field.type;
-      if (fieldType === "TEXT") {
-        return { type: "text", layerName: field.nexrenderLayer, value: asset.value };
-      }
-      if (fieldType === "COLOR") {
-        return { type: "data", layerName: field.nexrenderLayer, value: asset.value };
-      }
-      if (fieldType === "IMAGE") {
-        return { type: "image", layerName: field.nexrenderLayer, src: asset.value };
-      }
-      return null;
-    }).filter(Boolean);
+    const assets = job.assets
+      .map((asset: { fieldId: string; value: string }) => {
+        const field = job.fields.find(
+          (f: { _id: string; type: string; nexrenderLayer: string }) => f._id === asset.fieldId
+        );
+        if (!field) return null;
+        if (field.type === "TEXT") {
+          return { type: "text", layerName: field.nexrenderLayer, value: asset.value };
+        }
+        if (field.type === "COLOR") {
+          return { type: "data", layerName: field.nexrenderLayer, value: asset.value };
+        }
+        if (field.type === "IMAGE") {
+          return { type: "image", layerName: field.nexrenderLayer, src: asset.value };
+        }
+        return null;
+      })
+      .filter((a): a is NonNullable<typeof a> => a !== null);
 
     const body = {
       template: {
@@ -52,7 +53,7 @@ export const dispatch = action({
     const res = await fetch(NEXRENDER_API, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
@@ -67,7 +68,7 @@ export const dispatch = action({
       return;
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as { id?: string; _id?: string; jobId?: string };
     await ctx.runMutation(internal.nexrender.setJobDispatched, {
       jobId,
       nexrenderJobId: data.id ?? data._id ?? String(data.jobId ?? ""),
@@ -75,9 +76,9 @@ export const dispatch = action({
   },
 });
 
-// ── Internal queries/mutations used by the action ──────────────
+// ── Internal helpers ────────────────────────────────────────────
 
-export const getJobForDispatch = internalMutation({
+export const getJobForDispatch = internalQuery({
   args: { jobId: v.id("jobs") },
   handler: async (ctx, { jobId }) => {
     const job = await ctx.db.get(jobId);

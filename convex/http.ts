@@ -14,14 +14,23 @@ http.route({
   path: "/api/nexrender-callback",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
-    let body: Record<string, unknown>;
+    let body: {
+      jobId?: string;
+      state?: string;
+      status?: string;
+      outputUrl?: string;
+      output?: string;
+      error?: string;
+      errorMessage?: string;
+      progress?: number;
+      data?: { jobId?: string };
+    };
     try {
-      body = await request.json();
+      body = await request.json() as typeof body;
     } catch {
       return new Response("Bad JSON", { status: 400 });
     }
 
-    // nexrender sends back the original `data` we passed + job info
     const jobId = (body.jobId ?? body.data?.jobId) as Id<"jobs"> | undefined;
     if (!jobId) return new Response("Missing jobId", { status: 400 });
 
@@ -30,11 +39,6 @@ http.route({
     const errorMessage = (body.error ?? body.errorMessage ?? "") as string;
 
     if (status === "finished" || status === "done" || status === "completed") {
-      await ctx.runMutation(internal.nexrender.setJobError, {
-        jobId,
-        errorMessage: "",
-      });
-      // Use jobs:updateRenderProgress to set DONE
       await ctx.runMutation(internal.jobs.updateRenderProgress, {
         jobId,
         progress: 100,
