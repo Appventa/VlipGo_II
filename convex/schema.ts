@@ -48,11 +48,13 @@ export default defineSchema({
     renderStatus: v.union(
       v.literal("QUEUED"),
       v.literal("RENDERING"),
+      v.literal("PREVIEW_READY"),
       v.literal("DONE"),
       v.literal("ERROR")
     ),
     renderProgress: v.number(),
     nexrenderJobId: v.optional(v.string()),
+    previewUrl: v.optional(v.string()),
     outputUrl: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
   })

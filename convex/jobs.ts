@@ -48,10 +48,32 @@ export const create = mutation({
       )
     );
 
-    // Dispatch to nexrender
-    await ctx.scheduler.runAfter(0, internal.nexrender.dispatch, { jobId });
+    // Dispatch preview render first
+    await ctx.scheduler.runAfter(0, internal.nexrender.dispatch, { jobId, preview: true });
 
     return jobId;
+  },
+});
+
+// ── Customer: approve preview and trigger HD render ─────────────
+
+export const approvePreview = mutation({
+  args: { jobId: v.id("jobs") },
+  handler: async (ctx, { jobId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthenticated");
+    const user = await ctx.db.get(userId);
+    const job = await ctx.db.get(jobId);
+    if (!job) throw new Error("Job not found");
+    if (job.userId !== userId && user?.role !== "ADMIN") throw new Error("Forbidden");
+    if (job.renderStatus !== "PREVIEW_READY") throw new Error("Job is not in preview state");
+
+    await ctx.db.patch(jobId, {
+      renderStatus: "QUEUED",
+      renderProgress: 0,
+      errorMessage: undefined,
+    });
+    await ctx.scheduler.runAfter(0, internal.nexrender.dispatch, { jobId, preview: false });
   },
 });
 
@@ -64,16 +86,19 @@ export const updateRenderProgress = internalMutation({
     status: v.union(
       v.literal("QUEUED"),
       v.literal("RENDERING"),
+      v.literal("PREVIEW_READY"),
       v.literal("DONE"),
       v.literal("ERROR")
     ),
+    previewUrl: v.optional(v.string()),
     outputUrl: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
   },
-  handler: async (ctx, { jobId, progress, status, outputUrl, errorMessage }) => {
+  handler: async (ctx, { jobId, progress, status, previewUrl, outputUrl, errorMessage }) => {
     await ctx.db.patch(jobId, {
       renderProgress: progress,
       renderStatus: status,
+      ...(previewUrl ? { previewUrl } : {}),
       ...(outputUrl ? { outputUrl } : {}),
       ...(errorMessage ? { errorMessage } : {}),
     });
@@ -94,8 +119,9 @@ export const retryRender = mutation({
       renderProgress: 0,
       errorMessage: undefined,
       outputUrl: undefined,
+      previewUrl: undefined,
     });
-    await ctx.scheduler.runAfter(0, internal.nexrender.dispatch, { jobId });
+    await ctx.scheduler.runAfter(0, internal.nexrender.dispatch, { jobId, preview: true });
   },
 });
 

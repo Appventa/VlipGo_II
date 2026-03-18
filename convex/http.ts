@@ -23,7 +23,7 @@ http.route({
       error?: string;
       errorMessage?: string;
       progress?: number;
-      data?: { jobId?: string };
+      data?: { jobId?: string; isPreview?: boolean };
     };
     try {
       body = await request.json() as typeof body;
@@ -34,17 +34,29 @@ http.route({
     const jobId = (body.jobId ?? body.data?.jobId) as Id<"jobs"> | undefined;
     if (!jobId) return new Response("Missing jobId", { status: 400 });
 
+    const isPreview = body.data?.isPreview ?? false;
     const status = (body.state ?? body.status ?? "") as string;
     const outputUrl = (body.outputUrl ?? body.output ?? "") as string;
     const errorMessage = (body.error ?? body.errorMessage ?? "") as string;
 
     if (status === "finished" || status === "done" || status === "completed") {
-      await ctx.runMutation(internal.jobs.updateRenderProgress, {
-        jobId,
-        progress: 100,
-        status: "DONE",
-        outputUrl: outputUrl || undefined,
-      });
+      if (isPreview) {
+        // Preview render done — store previewUrl, wait for customer approval
+        await ctx.runMutation(internal.jobs.updateRenderProgress, {
+          jobId,
+          progress: 100,
+          status: "PREVIEW_READY",
+          previewUrl: outputUrl || undefined,
+        });
+      } else {
+        // Final HD render done
+        await ctx.runMutation(internal.jobs.updateRenderProgress, {
+          jobId,
+          progress: 100,
+          status: "DONE",
+          outputUrl: outputUrl || undefined,
+        });
+      }
     } else if (status === "error" || status === "failed") {
       await ctx.runMutation(internal.jobs.updateRenderProgress, {
         jobId,

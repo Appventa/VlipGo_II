@@ -7,8 +7,8 @@ const NEXRENDER_API = "https://api.nexrender.com/api/v2/jobs";
 // ── Dispatch a render job to nexrender cloud ────────────────────
 
 export const dispatch = internalAction({
-  args: { jobId: v.id("jobs") },
-  handler: async (ctx, { jobId }) => {
+  args: { jobId: v.id("jobs"), preview: v.boolean() },
+  handler: async (ctx, { jobId, preview }) => {
     const job = await ctx.runQuery(internal.nexrender.getJobForDispatch, { jobId });
     if (!job) throw new Error(`Job ${jobId} not found`);
 
@@ -43,10 +43,11 @@ export const dispatch = internalAction({
         composition: job.template.nexrenderCompositionName ?? "main",
       },
       assets,
+      preview,
       webhook: {
         url: callbackUrl,
         method: "POST",
-        data: { jobId },
+        data: { jobId, isPreview: preview },
       },
     };
 

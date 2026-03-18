@@ -1,15 +1,17 @@
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
 import { cn } from "../../lib/utils";
-import { Download, AlertCircle, Clock, Loader2, CheckCircle2 } from "lucide-react";
+import { Download, AlertCircle, Clock, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
 
 function StatusIcon({ status }: { status: string }) {
   if (status === "DONE") return <CheckCircle2 className="text-green-500" size={20} />;
   if (status === "ERROR") return <AlertCircle className="text-red-500" size={20} />;
+  if (status === "PREVIEW_READY") return <PlayCircle className="text-amber-500" size={20} />;
   if (status === "RENDERING") return <Loader2 className="text-blue-500 animate-spin" size={20} />;
   return <Clock className="text-gray-400" size={20} />;
 }
@@ -17,6 +19,8 @@ function StatusIcon({ status }: { status: string }) {
 export function OrderDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const job = useQuery(api.jobs.getById, { jobId: jobId as Id<"jobs"> });
+  const approvePreview = useMutation(api.jobs.approvePreview);
+  const [approving, setApproving] = useState(false);
 
   if (job === undefined) return <ShopLayout><Loading /></ShopLayout>;
   if (!job) return <ShopLayout><div className="py-20 text-center text-gray-500">Order not found.</div></ShopLayout>;
@@ -24,6 +28,16 @@ export function OrderDetailPage() {
   const isDone = job.renderStatus === "DONE";
   const isError = job.renderStatus === "ERROR";
   const isRendering = job.renderStatus === "RENDERING";
+  const isPreviewReady = job.renderStatus === "PREVIEW_READY";
+
+  async function handleApprove() {
+    setApproving(true);
+    try {
+      await approvePreview({ jobId: job!._id });
+    } finally {
+      setApproving(false);
+    }
+  }
 
   return (
     <ShopLayout>
@@ -41,6 +55,7 @@ export function OrderDetailPage() {
           "rounded-xl border p-6 mb-6",
           isDone ? "bg-green-50 border-green-200" :
           isError ? "bg-red-50 border-red-200" :
+          isPreviewReady ? "bg-amber-50 border-amber-200" :
           "bg-white border-gray-200"
         )}>
           <div className="flex items-center justify-between mb-4">
@@ -49,15 +64,16 @@ export function OrderDetailPage() {
               "text-sm font-medium px-3 py-1 rounded-full",
               isDone ? "bg-green-100 text-green-700" :
               isError ? "bg-red-100 text-red-700" :
+              isPreviewReady ? "bg-amber-100 text-amber-700" :
               isRendering ? "bg-blue-100 text-blue-700" :
               "bg-gray-100 text-gray-600"
             )}>
-              {job.renderStatus}
+              {isPreviewReady ? "Preview Ready" : job.renderStatus}
             </span>
           </div>
 
-          {/* Progress bar */}
-          {!isDone && !isError && (
+          {/* Progress bar — shown while queued or rendering */}
+          {!isDone && !isError && !isPreviewReady && (
             <div className="mb-4">
               <div className="flex justify-between text-xs text-gray-500 mb-1">
                 <span>{isRendering ? "Rendering…" : "Queued — waiting for renderer"}</span>
@@ -72,6 +88,30 @@ export function OrderDetailPage() {
             </div>
           )}
 
+          {/* Preview player + approve button */}
+          {isPreviewReady && job.previewUrl && (
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-amber-700">
+                Your preview is ready! Watch it below, then approve to render the full HD version.
+              </p>
+              <video
+                src={job.previewUrl}
+                controls
+                className="w-full rounded-lg bg-black"
+                style={{ maxHeight: 280 }}
+              />
+              <button
+                onClick={handleApprove}
+                disabled={approving}
+                className="flex items-center justify-center gap-2 w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold rounded-lg transition-colors"
+              >
+                {approving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                {approving ? "Submitting…" : "Looks good — Render Full HD"}
+              </button>
+            </div>
+          )}
+
+          {/* Download button */}
           {isDone && job.outputUrl && (
             <a
               href={job.outputUrl}
