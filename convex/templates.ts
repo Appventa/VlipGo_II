@@ -4,6 +4,13 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 
 // ── Public queries ──────────────────────────────────────────────
 
+async function resolveThumb(ctx: { storage: { getUrl: (id: string) => Promise<string | null> } }, storageId?: string) {
+  if (!storageId) return undefined;
+  // Already a full URL (legacy data)
+  if (storageId.startsWith("http")) return storageId;
+  return (await ctx.storage.getUrl(storageId)) ?? undefined;
+}
+
 export const listPublished = query({
   args: {
     category: v.optional(v.string()),
@@ -27,7 +34,12 @@ export const listPublished = query({
           t.tags.some((tag) => tag.toLowerCase().includes(q))
       );
     }
-    return templates;
+    return Promise.all(
+      templates.map(async (t) => ({
+        ...t,
+        thumbnailUrl: await resolveThumb(ctx, t.thumbnailUrl),
+      }))
+    );
   },
 });
 
@@ -41,7 +53,7 @@ export const getById = query({
       .withIndex("by_template", (q) => q.eq("templateId", templateId))
       .collect();
     fields.sort((a, b) => a.order - b.order);
-    return { ...template, fields };
+    return { ...template, thumbnailUrl: await resolveThumb(ctx, template.thumbnailUrl), fields };
   },
 });
 
