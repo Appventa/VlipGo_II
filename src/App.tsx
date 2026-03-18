@@ -6,11 +6,15 @@ import { LoginPage } from "./pages/shop/LoginPage";
 import { RegisterPage } from "./pages/shop/RegisterPage";
 import { TemplatesPage } from "./pages/shop/TemplatesPage";
 import { TemplateDetailPage } from "./pages/shop/TemplateDetailPage";
+import { CustomizePage } from "./pages/shop/CustomizePage";
+import { OrdersPage } from "./pages/shop/OrdersPage";
+import { OrderDetailPage } from "./pages/shop/OrderDetailPage";
 
 // Admin pages
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
 import { AdminTemplatesPage } from "./pages/admin/AdminTemplatesPage";
 import { AdminNewTemplatePage } from "./pages/admin/AdminNewTemplatePage";
+import { AdminJobsPage } from "./pages/admin/AdminJobsPage";
 
 // Layouts
 import { ShopLayout } from "./layouts/ShopLayout";
@@ -42,12 +46,6 @@ const AdminDashboard = () => (
   </AdminLayout>
 );
 
-const AdminJobs = () => (
-  <AdminLayout>
-    <h1 className="text-2xl font-bold text-gray-900">Jobs</h1>
-    <p className="text-gray-500 mt-2">Coming soon.</p>
-  </AdminLayout>
-);
 
 export default function App() {
   return (
@@ -61,7 +59,9 @@ export default function App() {
         <Route path="/templates/:id" element={<TemplateDetailPage />} />
 
         {/* Customer protected */}
-        <Route path="/orders" element={<ProtectedRoute><ShopLayout><div className="py-10 text-gray-500">Orders — coming soon</div></ShopLayout></ProtectedRoute>} />
+        <Route path="/templates/:id/customize" element={<ProtectedRoute><CustomizePage /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+        <Route path="/orders/:jobId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
 
         {/* Admin */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -69,7 +69,7 @@ export default function App() {
         <Route path="/admin/templates" element={<ProtectedRoute requiredRole="ADMIN"><AdminTemplatesPage /></ProtectedRoute>} />
         <Route path="/admin/templates/new" element={<ProtectedRoute requiredRole="ADMIN"><AdminNewTemplatePage /></ProtectedRoute>} />
         <Route path="/admin/templates/:id/edit" element={<ProtectedRoute requiredRole="ADMIN"><AdminNewTemplatePage /></ProtectedRoute>} />
-        <Route path="/admin/jobs" element={<ProtectedRoute requiredRole="ADMIN"><AdminJobs /></ProtectedRoute>} />
+        <Route path="/admin/jobs" element={<ProtectedRoute requiredRole="ADMIN"><AdminJobsPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

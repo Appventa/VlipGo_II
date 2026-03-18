@@ -1,0 +1,116 @@
+import { useQuery } from "convex/react";
+import { useParams, Link } from "react-router-dom";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import { ShopLayout } from "../../layouts/ShopLayout";
+import { Loading } from "../../components/ui/Loading";
+import { cn } from "../../lib/utils";
+import { Download, AlertCircle, Clock, Loader2, CheckCircle2 } from "lucide-react";
+
+function StatusIcon({ status }: { status: string }) {
+  if (status === "DONE") return <CheckCircle2 className="text-green-500" size={20} />;
+  if (status === "ERROR") return <AlertCircle className="text-red-500" size={20} />;
+  if (status === "RENDERING") return <Loader2 className="text-blue-500 animate-spin" size={20} />;
+  return <Clock className="text-gray-400" size={20} />;
+}
+
+export function OrderDetailPage() {
+  const { jobId } = useParams<{ jobId: string }>();
+  const job = useQuery(api.jobs.getById, { jobId: jobId as Id<"jobs"> });
+
+  if (job === undefined) return <ShopLayout><Loading /></ShopLayout>;
+  if (!job) return <ShopLayout><div className="py-20 text-center text-gray-500">Order not found.</div></ShopLayout>;
+
+  const isDone = job.renderStatus === "DONE";
+  const isError = job.renderStatus === "ERROR";
+  const isRendering = job.renderStatus === "RENDERING";
+
+  return (
+    <ShopLayout>
+      <div className="max-w-lg mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <StatusIcon status={job.renderStatus} />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{job.template?.title ?? "Your Order"}</h1>
+            <p className="text-sm text-gray-500">Order ID: {job._id.slice(-8).toUpperCase()}</p>
+          </div>
+        </div>
+
+        {/* Status card */}
+        <div className={cn(
+          "rounded-xl border p-6 mb-6",
+          isDone ? "bg-green-50 border-green-200" :
+          isError ? "bg-red-50 border-red-200" :
+          "bg-white border-gray-200"
+        )}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-semibold text-gray-700">Render Status</span>
+            <span className={cn(
+              "text-sm font-medium px-3 py-1 rounded-full",
+              isDone ? "bg-green-100 text-green-700" :
+              isError ? "bg-red-100 text-red-700" :
+              isRendering ? "bg-blue-100 text-blue-700" :
+              "bg-gray-100 text-gray-600"
+            )}>
+              {job.renderStatus}
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          {!isDone && !isError && (
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>{isRendering ? "Rendering…" : "Queued — waiting for renderer"}</span>
+                <span>{job.renderProgress}%</span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                  style={{ width: `${job.renderProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {isDone && job.outputUrl && (
+            <a
+              href={job.outputUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+            >
+              <Download size={18} />
+              Download MP4
+            </a>
+          )}
+
+          {isError && (
+            <div className="text-sm text-red-600">
+              <p className="font-medium mb-1">Render failed</p>
+              <p className="text-red-500">{job.errorMessage ?? "Unknown error. Please contact support."}</p>
+            </div>
+          )}
+        </div>
+
+        {/* What you submitted */}
+        {job.assets.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h2 className="font-semibold text-gray-700 mb-3">Your Customizations</h2>
+            <ul className="flex flex-col gap-2 text-sm text-gray-600">
+              {job.assets.map((a) => (
+                <li key={a._id} className="flex gap-2">
+                  <span className="text-gray-400">•</span>
+                  <span className="break-all">{a.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-6 text-center">
+          <Link to="/orders" className="text-sm text-blue-600 hover:underline">← All orders</Link>
+        </div>
+      </div>
+    </ShopLayout>
+  );
+}
