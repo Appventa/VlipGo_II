@@ -83,25 +83,38 @@ export const updateRenderProgress = internalMutation({
   args: {
     jobId: v.id("jobs"),
     progress: v.number(),
+    // "FINISHED" means nexrender completed — this mutation decides PREVIEW_READY vs DONE
     status: v.union(
-      v.literal("QUEUED"),
       v.literal("RENDERING"),
-      v.literal("PREVIEW_READY"),
-      v.literal("DONE"),
+      v.literal("FINISHED"),
       v.literal("ERROR")
     ),
-    previewUrl: v.optional(v.string()),
     outputUrl: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
   },
-  handler: async (ctx, { jobId, progress, status, previewUrl, outputUrl, errorMessage }) => {
-    await ctx.db.patch(jobId, {
-      renderProgress: progress,
-      renderStatus: status,
-      ...(previewUrl ? { previewUrl } : {}),
-      ...(outputUrl ? { outputUrl } : {}),
-      ...(errorMessage ? { errorMessage } : {}),
-    });
+  handler: async (ctx, { jobId, progress, status, outputUrl, errorMessage }) => {
+    if (status === "FINISHED") {
+      const job = await ctx.db.get(jobId);
+      if (job?.renderPhase === "PREVIEW") {
+        await ctx.db.patch(jobId, {
+          renderProgress: 100,
+          renderStatus: "PREVIEW_READY",
+          ...(outputUrl ? { previewUrl: outputUrl } : {}),
+        });
+      } else {
+        await ctx.db.patch(jobId, {
+          renderProgress: 100,
+          renderStatus: "DONE",
+          ...(outputUrl ? { outputUrl } : {}),
+        });
+      }
+    } else {
+      await ctx.db.patch(jobId, {
+        renderProgress: progress,
+        renderStatus: status,
+        ...(errorMessage ? { errorMessage } : {}),
+      });
+    }
   },
 });
 

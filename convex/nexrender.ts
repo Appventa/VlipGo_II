@@ -73,6 +73,7 @@ export const dispatch = internalAction({
     await ctx.runMutation(internal.nexrender.setJobDispatched, {
       jobId,
       nexrenderJobId: data.id ?? data._id ?? String(data.jobId ?? ""),
+      preview,
     });
   },
 });
@@ -99,12 +100,13 @@ export const getJobForDispatch = internalQuery({
 });
 
 export const setJobDispatched = internalMutation({
-  args: { jobId: v.id("jobs"), nexrenderJobId: v.string() },
-  handler: async (ctx, { jobId, nexrenderJobId }) => {
+  args: { jobId: v.id("jobs"), nexrenderJobId: v.string(), preview: v.boolean() },
+  handler: async (ctx, { jobId, nexrenderJobId, preview }) => {
     await ctx.db.patch(jobId, {
       renderStatus: "RENDERING",
       renderProgress: 0,
       nexrenderJobId,
+      renderPhase: preview ? "PREVIEW" : "FINAL",
     });
   },
 });

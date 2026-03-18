@@ -54,6 +54,7 @@ export default defineSchema({
     ),
     renderProgress: v.number(),
     nexrenderJobId: v.optional(v.string()),
+    renderPhase: v.optional(v.union(v.literal("PREVIEW"), v.literal("FINAL"))),
     previewUrl: v.optional(v.string()),
     outputUrl: v.optional(v.string()),
     errorMessage: v.optional(v.string()),

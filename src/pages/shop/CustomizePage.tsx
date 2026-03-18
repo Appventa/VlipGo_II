@@ -80,7 +80,7 @@ export function CustomizePage() {
       <div className="max-w-xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Customize: {template.title}</h1>
-          <p className="text-gray-500 mt-1">Fill in your details below. Renders in ~5–8 min.</p>
+          <p className="text-gray-500 mt-1">Fill in your details below. We'll render a quick preview first.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -157,7 +157,7 @@ export function CustomizePage() {
           </div>
 
           <Button type="submit" size="lg" loading={loading}>
-            Submit & Start Render →
+            Get Preview →
           </Button>
         </form>
       </div>
