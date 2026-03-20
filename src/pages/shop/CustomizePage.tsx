@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCreditsModal } from "../../contexts/CreditsModalContext";
 import { useQuery, useMutation } from "convex/react";
@@ -46,14 +46,6 @@ export function CustomizePage() {
       Object.values(imagePreviews).forEach((u) => URL.revokeObjectURL(u));
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const ytId = useMemo(() => {
-    if (!template?.previewVideoUrl) return null;
-    const m = template.previewVideoUrl.match(
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
-    );
-    return m ? m[1] : null;
-  }, [template?.previewVideoUrl]);
 
   if (template === undefined) return <ShopLayout><Loading /></ShopLayout>;
   if (!template) return <ShopLayout><div className="py-20 text-center text-gray-500">Template not found.</div></ShopLayout>;
@@ -201,16 +193,7 @@ export function CustomizePage() {
           {/* Video / thumbnail */}
           <div className="aspect-video bg-[#1e1e1e] rounded-xl overflow-hidden">
             {template.previewVideoUrl ? (
-              ytId ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${ytId}?controls=0&rel=0&modestbranding=1`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <video src={template.previewVideoUrl} controls className="w-full h-full object-cover" />
-              )
+              <video src={template.previewVideoUrl} controls className="w-full h-full object-cover" />
             ) : template.thumbnailUrl ? (
               <img src={template.thumbnailUrl} alt={template.title} className="w-full h-full object-cover" />
             ) : (

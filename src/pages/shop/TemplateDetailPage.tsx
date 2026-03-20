@@ -9,11 +9,6 @@ import { FavoriteButton } from "../../components/ui/FavoriteButton";
 import { formatPrice, cn } from "../../lib/utils";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 
-function getYouTubeEmbedId(url: string): string | null {
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
-
 const PERKS = [
   "Commercial Use Licensed",
   "Full HD Export Included",
@@ -31,7 +26,6 @@ export function TemplateDetailPage() {
   if (template === undefined) return <ShopLayout><Loading /></ShopLayout>;
   if (!template) return <ShopLayout><div className="py-20 text-center text-gray-500">Template not found.</div></ShopLayout>;
 
-  const ytId = template.previewVideoUrl ? getYouTubeEmbedId(template.previewVideoUrl) : null;
   const similar = allTemplates
     ?.filter((t) => t._id !== template._id && t.category === template.category)
     .slice(0, 4) ?? [];
@@ -57,14 +51,7 @@ export function TemplateDetailPage() {
             <span className="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full tracking-wide">
               ● PREVIEW
             </span>
-            {template.previewVideoUrl && ytId ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${ytId}?controls=0&rel=0&modestbranding=1`}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : template.previewVideoUrl ? (
+            {template.previewVideoUrl ? (
               <video src={template.previewVideoUrl} controls className="w-full h-full object-cover" />
             ) : template.thumbnailUrl ? (
               <img src={template.thumbnailUrl} alt={template.title} className="w-full h-full object-cover" />

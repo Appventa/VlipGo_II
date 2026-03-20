@@ -57,7 +57,7 @@ export const getById = query({
       .withIndex("by_template", (q) => q.eq("templateId", templateId))
       .collect();
     fields.sort((a, b) => a.order - b.order);
-    return { ...template, thumbnailUrl: await resolveThumb(ctx, template.thumbnailUrl), fields };
+    return { ...template, thumbnailUrl: await resolveThumb(ctx, template.thumbnailUrl), previewVideoUrl: await resolveThumb(ctx, template.previewVideoUrl), fields };
   },
 });
 
@@ -86,6 +86,7 @@ export const listAll = query({
       templates.map(async (t) => ({
         ...t,
         thumbnailUrl: await resolveThumb(ctx, t.thumbnailUrl),
+        previewVideoUrl: await resolveThumb(ctx, t.previewVideoUrl),
       }))
     );
   },
@@ -108,12 +109,13 @@ export const getByIdAdmin = query({
     return {
       ...template,
       thumbnailUrl: await resolveThumb(ctx, template.thumbnailUrl),
+      previewVideoUrl: await resolveThumb(ctx, template.previewVideoUrl),
       fields,
     };
   },
 });
 
-/** Admin: all templates that have a thumbnail, for the Media Assets page */
+/** Admin: all uploaded media assets (thumbnails + preview videos) from templates. User uploads NOT included. */
 export const listMediaAssets = query({
   args: {},
   handler: async (ctx) => {
@@ -122,16 +124,26 @@ export const listMediaAssets = query({
     const user = await ctx.db.get(userId);
     if (user?.role !== "ADMIN") throw new Error("Forbidden");
     const templates = await ctx.db.query("templates").order("desc").collect();
-    const withThumbs = templates.filter((t) => t.thumbnailUrl);
-    return Promise.all(
-      withThumbs.map(async (t) => ({
-        _id: t._id,
-        title: t.title,
-        isPublished: t.isPublished,
-        isArchived: t.isArchived,
-        thumbnailUrl: await resolveThumb(ctx, t.thumbnailUrl),
-      }))
-    );
+    const items: Array<{
+      key: string;
+      templateId: string;
+      templateTitle: string;
+      type: "image" | "video";
+      url: string;
+      isPublished: boolean;
+      isArchived: boolean;
+    }> = [];
+    for (const t of templates) {
+      if (t.thumbnailUrl) {
+        const url = await resolveThumb(ctx, t.thumbnailUrl);
+        if (url) items.push({ key: `${t._id}_thumb`, templateId: t._id, templateTitle: t.title, type: "image", url, isPublished: t.isPublished, isArchived: t.isArchived });
+      }
+      if (t.previewVideoUrl) {
+        const url = await resolveThumb(ctx, t.previewVideoUrl);
+        if (url) items.push({ key: `${t._id}_video`, templateId: t._id, templateTitle: t.title, type: "video", url, isPublished: t.isPublished, isArchived: t.isArchived });
+      }
+    }
+    return items;
   },
 });
 

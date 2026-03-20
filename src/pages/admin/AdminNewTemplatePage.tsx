@@ -6,7 +6,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/ui/Loading";
 import { cn } from "../../lib/utils";
-import { Plus, Trash2, GripVertical, Upload, X, ImageIcon } from "lucide-react";
+import { Plus, Trash2, GripVertical, Upload, X, ImageIcon, Film } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -212,6 +212,7 @@ export function AdminNewTemplatePage() {
     id ? { templateId: id as Id<"templates"> } : "skip"
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -223,7 +224,9 @@ export function AdminNewTemplatePage() {
   const [previewComp, setPreviewComp] = useState("");
   const [finalId, setFinalId] = useState("");
   const [finalComp, setFinalComp] = useState("");
-  const [previewVideoUrl, setPreviewVideoUrl] = useState("");
+  const [videoStorageId, setVideoStorageId] = useState("");
+  const [videoPreview, setVideoPreview] = useState("");
+  const [videoUploading, setVideoUploading] = useState(false);
   const [orientation, setOrientation] = useState<"WIDE" | "VERTICAL">("WIDE");
   const [isPublished, setIsPublished] = useState(false);
   const [thumbnailStorageId, setThumbnailStorageId] = useState("");
@@ -250,7 +253,8 @@ export function AdminNewTemplatePage() {
     setPreviewComp(existing.nexrenderCompositionName ?? "");
     setFinalId(existing.nexrenderFinalComposition ?? "");
     setFinalComp(existing.nexrenderFinalCompositionName ?? "");
-    setPreviewVideoUrl(existing.previewVideoUrl ?? "");
+    setVideoStorageId(existing.previewVideoUrl ?? "");
+    setVideoPreview(existing.previewVideoUrl ?? "");
     setOrientation((existing.orientation as "WIDE" | "VERTICAL") ?? "WIDE");
     setIsPublished(existing.isPublished);
     setThumbnailStorageId(existing.thumbnailUrl ?? "");
@@ -299,6 +303,28 @@ export function AdminNewTemplatePage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setVideoPreview(URL.createObjectURL(file));
+    setVideoUploading(true);
+    try {
+      const uploadUrl = await generateUploadUrl();
+      const res = await fetch(uploadUrl, { method: "POST", body: file, headers: { "Content-Type": file.type } });
+      const { storageId } = await res.json();
+      setVideoStorageId(storageId);
+    } finally {
+      setVideoUploading(false);
+    }
+  }
+
+  function clearVideo() {
+    setVideoStorageId("");
+    setVideoPreview("");
+    if (videoFileInputRef.current) videoFileInputRef.current.value = "";
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -320,7 +346,7 @@ export function AdminNewTemplatePage() {
         nexrenderCompositionName: previewComp || undefined,
         nexrenderFinalComposition: finalId || undefined,
         nexrenderFinalCompositionName: finalComp || undefined,
-        previewVideoUrl: previewVideoUrl || undefined,
+        previewVideoUrl: videoStorageId || undefined,
         orientation,
         isPublished,
         thumbnailUrl: thumbnailStorageId || undefined,
@@ -493,15 +519,43 @@ export function AdminNewTemplatePage() {
             </FieldRow>
 
             {/* ── Preview Video ── */}
-            <FieldRow label="Preview Video URL">
-              <input
-                type="url"
-                value={previewVideoUrl}
-                onChange={(e) => setPreviewVideoUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=... or direct .mp4 URL"
-                className={inputCls}
-              />
-              <p className="text-xs text-gray-700 mt-1">YouTube must be <span className="text-gray-500">Unlisted</span> (not Private) for embedding.</p>
+            <FieldRow label="Preview Video">
+              {videoPreview ? (
+                <div className="flex flex-col gap-2">
+                  <video src={videoPreview} controls className="w-full rounded-xl bg-black" style={{ maxHeight: 180 }} />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => videoFileInputRef.current?.click()}
+                      disabled={videoUploading}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#262626] text-sm text-gray-300 hover:text-white hover:bg-[#333] transition-colors disabled:opacity-50"
+                    >
+                      <Upload size={13} /> {videoUploading ? "Uploading…" : "Replace"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearVideo}
+                      className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      title="Remove video"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => videoFileInputRef.current?.click()}
+                    disabled={videoUploading}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#262626] text-sm text-gray-300 hover:text-white hover:bg-[#333] transition-colors disabled:opacity-50 w-fit"
+                  >
+                    <Film size={13} /> {videoUploading ? "Uploading…" : "Upload video"}
+                  </button>
+                  <p className="text-xs text-gray-700">MP4, WebM or MOV. Shown as the template preview to customers.</p>
+                </div>
+              )}
+              <input ref={videoFileInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
             </FieldRow>
 
             {/* ── Publish ── */}
