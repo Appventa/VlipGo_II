@@ -84,6 +84,7 @@ export function OrdersPage() {
           {jobs.map((job) => {
             const isPreviewReady = job.renderStatus === "PREVIEW_READY";
             const isApproving = approvingId === job._id;
+            const hdCredits = Math.max(0, Math.round((job.templatePrice ?? 0) / 100) - 1);
 
             return (
               <div
@@ -148,7 +149,7 @@ export function OrdersPage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 text-white hover:brightness-110 disabled:opacity-60 transition-all"
                     >
                       {isApproving ? <Loader2 size={14} className="animate-spin" /> : null}
-                      {isApproving ? "Submitting…" : "Render HD →"}
+                      {isApproving ? "Submitting…" : <><span>Render HD</span><span className="text-indigo-200/70 font-normal text-xs ml-1">· {hdCredits} cr</span><span className="ml-0.5">→</span></>}
                     </button>
                   </div>
                 )}

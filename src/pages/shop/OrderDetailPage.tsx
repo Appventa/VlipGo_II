@@ -49,6 +49,7 @@ export function OrderDetailPage() {
   const isError = job.renderStatus === "ERROR";
   const isRendering = job.renderStatus === "RENDERING";
   const isPreviewReady = job.renderStatus === "PREVIEW_READY";
+  const hdCredits = Math.max(0, Math.round((job.template?.price ?? 0) / 100) - 1);
 
   async function handleApprove() {
     setApproving(true);
@@ -130,7 +131,7 @@ export function OrderDetailPage() {
                 className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:brightness-110 disabled:opacity-60 text-white font-semibold rounded-lg transition-all active:scale-[0.98]"
               >
                 {approving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                {approving ? "Submitting…" : "Looks good — Render Full HD"}
+                {approving ? "Submitting…" : <><span>Looks good — Render Full HD</span><span className="text-indigo-200/70 font-normal text-sm ml-1">· {hdCredits} credits</span></>}
               </button>
             </div>
           )}

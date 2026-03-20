@@ -168,14 +168,14 @@ export function CustomizePage() {
           <div className="w-7 h-7 rounded-full bg-[#262626] border border-[#333] flex items-center justify-center text-gray-600 text-xs font-medium shrink-0">
             2
           </div>
-          <span className="text-sm text-gray-600 hidden sm:block">Review</span>
+          <span className="text-sm text-gray-600 hidden sm:block">Preview</span>
         </div>
         <div className="w-16 sm:w-28 h-px bg-[#2a2a2a] mx-3" />
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-full bg-[#262626] border border-[#333] flex items-center justify-center text-gray-600 text-xs font-medium shrink-0">
             3
           </div>
-          <span className="text-sm text-gray-600 hidden sm:block">Payment</span>
+          <span className="text-sm text-gray-600 hidden sm:block">Final Render</span>
         </div>
       </div>
 
@@ -443,7 +443,7 @@ export function CustomizePage() {
             </div>
 
             <Button type="submit" size="lg" loading={loading} className="gap-2">
-              Get Preview <ArrowRight size={16} />
+              Get Preview <span className="text-indigo-200/70 font-normal text-sm">· 1 credit</span> <ArrowRight size={16} />
             </Button>
           </form>
         </div>

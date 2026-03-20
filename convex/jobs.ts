@@ -180,6 +180,7 @@ export const listByUser = query({
           templateTitle: template?.title ?? "Unknown",
           templateThumbnailUrl: thumbnailUrl ?? null,
           templateCategory: template?.category ?? null,
+          templatePrice: template?.price ?? 0,
         };
       })
     );
