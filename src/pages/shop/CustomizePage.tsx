@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -7,12 +7,19 @@ import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { ImageCropModal } from "../../components/ui/ImageCropModal";
 import { formatPrice, cn } from "../../lib/utils";
 import {
   ArrowLeft, ArrowRight, Maximize2,
   Type, FileImage, Palette,
-  CheckCircle2, UploadCloud,
+  CheckCircle2, UploadCloud, Pencil,
 } from "lucide-react";
+
+interface CropTarget {
+  fieldId: string;
+  dimensions?: string;
+  src: string; // object URL of raw picked file
+}
 
 export function CustomizePage() {
   const { id } = useParams<{ id: string }>();
@@ -22,11 +29,21 @@ export function CustomizePage() {
   const generateUploadUrl = useMutation(api.jobs.generateUploadUrl);
 
   const [values, setValues] = useState<Record<string, string>>({});
+  // Local object URLs for displaying cropped previews (before + after upload)
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [dragOver, setDragOver] = useState<Record<string, boolean>>({});
+  const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(imagePreviews).forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ytId = useMemo(() => {
     if (!template?.previewVideoUrl) return null;
@@ -43,18 +60,43 @@ export function CustomizePage() {
     setValues((prev) => ({ ...prev, [fieldId]: value }));
   }
 
-  async function handleImageUpload(fieldId: string, file: File) {
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Image must be under 10MB.");
+  /** Step 1 — file picked: open the crop modal */
+  function openCropper(fieldId: string, file: File, dimensions?: string) {
+    if (file.size > 20 * 1024 * 1024) {
+      setError("Image must be under 20MB.");
       return;
     }
+    // Revoke any existing object URL for this field
+    if (cropTarget?.src) URL.revokeObjectURL(cropTarget.src);
+    const src = URL.createObjectURL(file);
+    setCropTarget({ fieldId, dimensions, src });
+  }
+
+  /** Step 2 — user confirmed crop: upload the JPEG blob */
+  async function handleCroppedUpload(blob: Blob) {
+    if (!cropTarget) return;
+    const { fieldId } = cropTarget;
+
+    // Build a local preview URL from the blob
+    const previewUrl = URL.createObjectURL(blob);
+    // Revoke the raw source URL
+    URL.revokeObjectURL(cropTarget.src);
+    setCropTarget(null);
+
+    // Show preview immediately
+    setImagePreviews((prev) => {
+      if (prev[fieldId]) URL.revokeObjectURL(prev[fieldId]);
+      return { ...prev, [fieldId]: previewUrl };
+    });
+
     setUploading((prev) => ({ ...prev, [fieldId]: true }));
+    setError("");
     try {
       const uploadUrl = await generateUploadUrl();
       const uploadRes = await fetch(uploadUrl, {
         method: "POST",
-        body: file,
-        headers: { "Content-Type": file.type },
+        body: blob,
+        headers: { "Content-Type": "image/jpeg" },
       });
       if (!uploadRes.ok) throw new Error("Upload failed");
       const { storageId } = await uploadRes.json();
@@ -93,6 +135,19 @@ export function CustomizePage() {
 
   return (
     <ShopLayout>
+      {/* Crop modal — rendered at root level, above everything */}
+      {cropTarget && (
+        <ImageCropModal
+          src={cropTarget.src}
+          dimensions={cropTarget.dimensions}
+          onConfirm={handleCroppedUpload}
+          onCancel={() => {
+            URL.revokeObjectURL(cropTarget.src);
+            setCropTarget(null);
+          }}
+        />
+      )}
+
       {/* ── Step progress ── */}
       <div className="flex items-center justify-center mb-8">
         <div className="flex items-center gap-2.5">
@@ -243,76 +298,122 @@ export function CustomizePage() {
                   </div>
                 )}
 
-                {/* IMAGE — drag-and-drop zone */}
+                {/* IMAGE — smart crop-upload zone */}
                 {field.type === "IMAGE" && (
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
                       <FileImage size={13} className="text-[#C3C0FF]" />
                       {field.label}{field.required ? " *" : ""}
                     </label>
-                    <div
-                      onClick={() => fileInputRefs.current[field._id]?.click()}
-                      onDragOver={(e) => { e.preventDefault(); setDragOver((p) => ({ ...p, [field._id]: true })); }}
-                      onDragLeave={() => setDragOver((p) => ({ ...p, [field._id]: false }))}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setDragOver((p) => ({ ...p, [field._id]: false }));
-                        const file = e.dataTransfer.files?.[0];
-                        if (file) handleImageUpload(field._id, file);
-                      }}
-                      className={cn(
-                        "rounded-xl border border-dashed cursor-pointer transition-all",
-                        "flex flex-col items-center justify-center gap-2 py-7",
-                        dragOver[field._id]
-                          ? "border-[#C3C0FF]/60 bg-indigo-600/10"
-                          : values[field._id]
-                            ? "border-green-500/30 bg-green-500/[0.04]"
-                            : "border-[#C3C0FF]/15 bg-[#262626] hover:border-[#C3C0FF]/30"
-                      )}
-                    >
-                      {uploading[field._id] ? (
-                        <>
-                          <UploadCloud size={22} className="text-[#C3C0FF] animate-bounce" />
-                          <p className="text-xs text-[#C3C0FF]">Uploading…</p>
-                        </>
-                      ) : values[field._id] ? (
-                        <>
-                          <CheckCircle2 size={22} className="text-green-400" />
-                          <p className="text-xs text-green-400 font-medium">Image ready</p>
-                          <p className="text-xs text-gray-600">Click to replace</p>
+
+                    {/* ── Confirmed state: show cropped thumbnail ── */}
+                    {values[field._id] && imagePreviews[field._id] ? (
+                      <div className="relative rounded-xl overflow-hidden bg-[#262626] group">
+                        <img
+                          src={imagePreviews[field._id]}
+                          alt={field.label}
+                          className="w-full object-cover"
+                          style={{ maxHeight: 180 }}
+                        />
+                        {/* Overlay on hover */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRefs.current[field._id]?.click()}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#262626] text-sm text-white hover:bg-[#2e2e2e] transition-colors"
+                          >
+                            <Pencil size={12} /> Replace
+                          </button>
+                        </div>
+                        {/* Status bar */}
+                        <div className="absolute bottom-0 inset-x-0 px-3 py-2 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-xs text-green-400 font-medium">
+                            <CheckCircle2 size={12} /> Image ready
+                          </span>
                           {field.dimensions && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#C3C0FF]/10 text-[#C3C0FF] text-xs font-medium">
+                            <span className="text-xs text-[#C3C0FF]/70 tabular-nums">
                               {field.dimensions.replace("x", " × ")} px
                             </span>
                           )}
-                        </>
-                      ) : (
-                        <>
-                          <UploadCloud size={22} className="text-gray-500" />
-                          <p className="text-sm text-gray-400">
-                            Drop your file or{" "}
-                            <span className="text-[#C3C0FF]">Browse</span>
-                          </p>
-                          {field.dimensions ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#C3C0FF]/10 text-[#C3C0FF] text-xs font-medium">
-                              Required: {field.dimensions.replace("x", " × ")} px
-                            </span>
-                          ) : (
-                            <p className="text-xs text-gray-600">PNG, JPG, WEBP — max 10MB</p>
-                          )}
-                        </>
-                      )}
-                      <input
-                        ref={(el) => { fileInputRefs.current[field._id] = el; }}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleImageUpload(field._id, file);
+                        </div>
+                      </div>
+                    ) : (
+                      /* ── Empty / uploading drop zone ── */
+                      <div
+                        onClick={() => !uploading[field._id] && fileInputRefs.current[field._id]?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setDragOver((p) => ({ ...p, [field._id]: true })); }}
+                        onDragLeave={() => setDragOver((p) => ({ ...p, [field._id]: false }))}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDragOver((p) => ({ ...p, [field._id]: false }));
+                          const file = e.dataTransfer.files?.[0];
+                          if (file) openCropper(field._id, file, field.dimensions);
                         }}
-                      />
-                    </div>
+                        className={cn(
+                          "rounded-xl border border-dashed transition-all select-none",
+                          "flex flex-col items-center justify-center gap-2.5 py-8",
+                          uploading[field._id]
+                            ? "border-[#C3C0FF]/30 bg-indigo-600/5 cursor-wait"
+                            : dragOver[field._id]
+                              ? "border-[#C3C0FF]/60 bg-indigo-600/10 cursor-copy"
+                              : "border-[#C3C0FF]/15 bg-[#262626] hover:border-[#C3C0FF]/35 hover:bg-[#2a2a2a] cursor-pointer"
+                        )}
+                      >
+                        {uploading[field._id] ? (
+                          <>
+                            <div className="relative w-10 h-10">
+                              <svg className="animate-spin w-full h-full text-indigo-500" viewBox="0 0 24 24" fill="none">
+                                <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                                <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                              </svg>
+                              <UploadCloud size={16} className="absolute inset-0 m-auto text-indigo-400" />
+                            </div>
+                            <p className="text-sm text-indigo-300 font-medium">Uploading…</p>
+                            <p className="text-xs text-gray-600">Please wait</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-10 h-10 rounded-full bg-[#1e1e1e] flex items-center justify-center">
+                              <UploadCloud size={18} className="text-gray-500" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm text-gray-300">
+                                Drop image or{" "}
+                                <span className="text-[#C3C0FF] font-medium">Browse</span>
+                              </p>
+                              <p className="text-xs text-gray-600 mt-0.5">PNG, JPG, WEBP — max 20MB</p>
+                            </div>
+                            {field.dimensions && (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C3C0FF]/8 border border-[#C3C0FF]/15">
+                                <FileImage size={11} className="text-[#C3C0FF] shrink-0" />
+                                <span className="text-xs font-semibold text-[#C3C0FF]">
+                                  Required: {field.dimensions.replace("x", " × ")} px
+                                </span>
+                              </div>
+                            )}
+                            {field.dimensions && (
+                              <p className="text-[11px] text-gray-700 text-center">
+                                You'll crop your image to the exact size after selecting
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Hidden file input */}
+                    <input
+                      ref={(el) => { fileInputRefs.current[field._id] = el; }}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        // Reset so same file can be picked again
+                        e.target.value = "";
+                        if (file) openCropper(field._id, file, field.dimensions);
+                      }}
+                    />
                   </div>
                 )}
 
