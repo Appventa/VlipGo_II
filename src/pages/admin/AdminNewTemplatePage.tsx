@@ -103,6 +103,8 @@ function SortableFieldCard({ field, index, updateField, removeField, totalFields
     isDragging && "ring-1 ring-[#C3C0FF]/30 shadow-[0_8px_30px_rgba(0,0,0,0.4)] opacity-80"
   );
 
+  const fieldInputCls = "bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 w-full";
+
   return (
     <div ref={setNodeRef} style={style}>
       <div className={innerCls}>
@@ -112,78 +114,71 @@ function SortableFieldCard({ field, index, updateField, removeField, totalFields
           {...attributes}
           {...listeners}
           title="Drag to reorder"
-          className="mt-2.5 text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+          className="mt-2 text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing shrink-0 touch-none"
         >
           <GripVertical size={15} />
         </button>
 
         {/* Field inputs */}
-        <div className="flex-1 grid grid-cols-2 gap-2.5">
-          <input
-            placeholder="Label *"
-            value={field.label}
-            onChange={(e) => updateField(index, { label: e.target.value })}
-            className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
-          />
-          <input
-            placeholder="AE Layer name *"
-            value={field.nexrenderLayer}
-            onChange={(e) => updateField(index, { nexrenderLayer: e.target.value })}
-            className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
-          />
-          <select
-            value={field.type}
-            onChange={(e) => updateField(index, { type: e.target.value as FieldType, maxLength: undefined, dimensions: undefined })}
-            className={cn("bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 border", FIELD_TYPE_COLOR[field.type])}
-          >
-            <option value="TEXT">TEXT</option>
-            <option value="IMAGE">IMAGE</option>
-            <option value="COLOR">COLOR</option>
-          </select>
-          <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
-            <div className={cn(
-              "w-4 h-4 rounded flex items-center justify-center shrink-0",
-              field.required ? "bg-indigo-500" : "bg-[#333] border border-white/10"
-            )}>
-              {field.required && <span className="text-white text-[9px] font-bold">✓</span>}
-            </div>
-            <input type="checkbox" checked={field.required} onChange={(e) => updateField(index, { required: e.target.checked })} className="hidden" />
-            Required
-          </label>
+        <div className="flex-1 flex flex-col gap-2">
+          {/* Row 1: Type dropdown + Required checkbox */}
+          <div className="flex items-center gap-3">
+            <select
+              value={field.type}
+              onChange={(e) => updateField(index, { type: e.target.value as FieldType, maxLength: undefined, dimensions: undefined })}
+              className={cn("bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 border w-36 shrink-0", FIELD_TYPE_COLOR[field.type])}
+            >
+              <option value="TEXT">TEXT</option>
+              <option value="IMAGE">IMAGE</option>
+              <option value="COLOR">COLOR</option>
+            </select>
+            <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
+              <div className={cn(
+                "w-4 h-4 rounded flex items-center justify-center shrink-0",
+                field.required ? "bg-indigo-500" : "bg-[#333] border border-white/10"
+              )}>
+                {field.required && <span className="text-white text-[9px] font-bold">✓</span>}
+              </div>
+              <input type="checkbox" checked={field.required} onChange={(e) => updateField(index, { required: e.target.checked })} className="hidden" />
+              Required
+            </label>
+          </div>
 
-          {/* TEXT: max length */}
-          {field.type === "TEXT" && (
-            <div className="col-span-2 flex items-center gap-2">
-              <span className="text-xs text-gray-600 shrink-0">Max chars:</span>
+          {/* Row 2: Label + AE Layer + Max chars / Dimensions */}
+          <div className="grid grid-cols-3 gap-2">
+            <input
+              placeholder="Label *"
+              value={field.label}
+              onChange={(e) => updateField(index, { label: e.target.value })}
+              className={fieldInputCls}
+            />
+            <input
+              placeholder="AE Layer name *"
+              value={field.nexrenderLayer}
+              onChange={(e) => updateField(index, { nexrenderLayer: e.target.value })}
+              className={fieldInputCls}
+            />
+            {field.type === "TEXT" ? (
               <input
                 type="number"
                 min="1"
                 max="9999"
-                placeholder="e.g. 100 (optional)"
+                placeholder="Max chars"
                 value={field.maxLength ?? ""}
                 onChange={(e) => updateField(index, { maxLength: e.target.value ? parseInt(e.target.value) : undefined })}
-                className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+                className={fieldInputCls}
               />
-            </div>
-          )}
-
-          {/* IMAGE: dimensions */}
-          {field.type === "IMAGE" && (
-            <div className="col-span-2 flex items-center gap-2">
-              <span className="text-xs text-gray-600 shrink-0">Dimensions:</span>
+            ) : field.type === "IMAGE" ? (
               <input
                 type="text"
-                placeholder="e.g. 1280x720 (optional)"
+                placeholder="Dimensions"
                 value={field.dimensions ?? ""}
                 onChange={(e) => updateField(index, { dimensions: e.target.value })}
-                className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+                className={fieldInputCls}
               />
-            </div>
-          )}
-
-          {/* Order badge */}
-          <div className="col-span-2 flex items-center gap-1.5">
-            <span className="text-[10px] text-gray-700">Position {index + 1} of {totalFields}</span>
+            ) : (
+              <div />
+            )}
           </div>
         </div>
 
