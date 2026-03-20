@@ -79,10 +79,9 @@ interface SortableFieldCardProps {
   index: number;
   updateField: (i: number, patch: Partial<FieldDraft>) => void;
   removeField: (i: number) => void;
-  totalFields: number;
 }
 
-function SortableFieldCard({ field, index, updateField, removeField, totalFields }: SortableFieldCardProps) {
+function SortableFieldCard({ field, index, updateField, removeField }: SortableFieldCardProps) {
   const {
     attributes,
     listeners,
@@ -630,7 +629,6 @@ export function AdminNewTemplatePage() {
                       index={i}
                       updateField={updateField}
                       removeField={removeField}
-                      totalFields={fields.length}
                     />
                   ))}
                 </SortableContext>
