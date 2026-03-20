@@ -153,7 +153,16 @@ export const listByUser = query({
     return Promise.all(
       jobs.map(async (j) => {
         const template = await ctx.db.get(j.templateId);
-        return { ...j, templateTitle: template?.title ?? "Unknown" };
+        let thumbnailUrl = template?.thumbnailUrl;
+        if (thumbnailUrl && !thumbnailUrl.startsWith("http")) {
+          thumbnailUrl = (await ctx.storage.getUrl(thumbnailUrl)) ?? undefined;
+        }
+        return {
+          ...j,
+          templateTitle: template?.title ?? "Unknown",
+          templateThumbnailUrl: thumbnailUrl ?? null,
+          templateCategory: template?.category ?? null,
+        };
       })
     );
   },

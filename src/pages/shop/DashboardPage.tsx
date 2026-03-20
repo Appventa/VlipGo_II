@@ -118,24 +118,43 @@ export function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {recentJobs.map((job) => (
                 <Link
                   key={job._id}
                   to={`/orders/${job._id}`}
-                  className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#262626] transition-colors group"
+                  className="flex items-center gap-3.5 p-3 rounded-xl hover:bg-[#262626] transition-colors group"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-indigo-600/15 flex items-center justify-center shrink-0">
-                    <Film size={15} className="text-[#C3C0FF]" />
+                  {/* Thumbnail */}
+                  <div className="w-16 h-10 rounded-lg overflow-hidden bg-[#262626] shrink-0">
+                    {job.templateThumbnailUrl ? (
+                      <img
+                        src={job.templateThumbnailUrl}
+                        alt={job.templateTitle}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Film size={13} className="text-gray-600" />
+                      </div>
+                    )}
                   </div>
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate group-hover:text-[#C3C0FF] transition-colors">
+                    <p className="text-sm font-medium text-white truncate group-hover:text-[#C3C0FF] transition-colors leading-snug">
                       {job.templateTitle}
                     </p>
-                    <p className="text-xs text-gray-600 mt-0.5">{timeAgo(job._creationTime)}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {job.templateCategory && (
+                        <span className="text-xs text-gray-600 truncate">{job.templateCategory}</span>
+                      )}
+                      <span className="text-xs text-gray-700">·</span>
+                      <span className="text-xs text-gray-600">{timeAgo(job._creationTime)}</span>
+                    </div>
                   </div>
+                  {/* Status */}
                   <span className={cn(
-                    "text-xs font-medium px-2 py-0.5 rounded-full shrink-0",
+                    "text-xs font-medium px-2.5 py-1 rounded-full shrink-0",
                     STATUS_STYLES[job.renderStatus] ?? "bg-gray-500/20 text-gray-400"
                   )}>
                     {STATUS_LABELS[job.renderStatus] ?? job.renderStatus}
