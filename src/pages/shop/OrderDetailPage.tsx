@@ -7,7 +7,7 @@ import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
 import { useCreditsModal } from "../../contexts/CreditsModalContext";
 import { cn } from "../../lib/utils";
-import { Download, AlertCircle, Clock, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
+import { Download, AlertCircle, Clock, Loader2, CheckCircle2, PlayCircle, Type, ImageIcon } from "lucide-react";
 
 function StatusIcon({ status }: { status: string }) {
   if (status === "DONE") return <CheckCircle2 className="text-green-500" size={20} />;
@@ -159,12 +159,37 @@ export function OrderDetailPage() {
         {/* What you submitted */}
         {job.assets.length > 0 && (
           <div className="bg-[#1e1e1e] rounded-xl p-5">
-            <h2 className="font-semibold text-gray-300 mb-3">Your Customizations</h2>
-            <ul className="flex flex-col gap-2 text-sm text-gray-400">
+            <h2 className="font-semibold text-gray-300 mb-4">Your Customizations</h2>
+            <ul className="flex flex-col gap-4">
               {job.assets.map((a) => (
-                <li key={a._id} className="flex gap-2">
-                  <span className="text-gray-600">•</span>
-                  <span className="break-all">{a.value}</span>
+                <li key={a._id} className="flex items-start gap-3 text-sm">
+                  {a.fieldType === "IMAGE" ? (
+                    <>
+                      <ImageIcon size={15} className="text-[#C3C0FF] mt-0.5 shrink-0" />
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-gray-400">
+                          <span className="text-gray-500">{a.fieldLabel}:</span>
+                        </span>
+                        {a.resolvedUrl ? (
+                          <img
+                            src={a.resolvedUrl}
+                            alt={a.fieldLabel}
+                            className="w-32 h-20 object-cover rounded-lg bg-[#262626]"
+                          />
+                        ) : (
+                          <span className="text-gray-600 italic">Image uploaded</span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Type size={15} className="text-[#C3C0FF] mt-0.5 shrink-0" />
+                      <span className="text-gray-400">
+                        <span className="text-gray-500">{a.fieldLabel}: </span>
+                        &ldquo;{a.value}&rdquo;
+                      </span>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

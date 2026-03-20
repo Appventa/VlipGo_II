@@ -198,10 +198,23 @@ export const getById = query({
     if (job.userId !== userId && user?.role !== "ADMIN") return null;
 
     const template = await ctx.db.get(job.templateId);
-    const assets = await ctx.db
+    const rawAssets = await ctx.db
       .query("jobAssets")
       .withIndex("by_job", (q) => q.eq("jobId", jobId))
       .collect();
+
+    const assets = await Promise.all(
+      rawAssets.map(async (a) => {
+        const field = await ctx.db.get(a.fieldId);
+        let resolvedUrl: string | null = null;
+        if (field?.type === "IMAGE" && a.value && !a.value.startsWith("http")) {
+          resolvedUrl = await ctx.storage.getUrl(a.value as any);
+        } else if (field?.type === "IMAGE" && a.value?.startsWith("http")) {
+          resolvedUrl = a.value;
+        }
+        return { ...a, fieldLabel: field?.label ?? "", fieldType: field?.type ?? "TEXT", resolvedUrl };
+      })
+    );
 
     return { ...job, template, assets };
   },
