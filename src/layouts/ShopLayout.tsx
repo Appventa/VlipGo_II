@@ -25,6 +25,7 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
             {user ? (
               <>
                 <Link to="/dashboard" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">Dashboard</Link>
+                <Link to="/templates" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">Templates</Link>
                 <Link to="/orders" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">My Orders</Link>
                 {user.role === "ADMIN" && (
                   <Link to="/admin" className="text-sm text-[#C3C0FF] font-medium hover:brightness-110 transition-colors px-2 py-1">Admin</Link>
