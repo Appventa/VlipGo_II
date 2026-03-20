@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Shop pages
+import { LandingPage } from "./pages/shop/LandingPage";
 import { LoginPage } from "./pages/shop/LoginPage";
 import { RegisterPage } from "./pages/shop/RegisterPage";
 import { TemplatesPage } from "./pages/shop/TemplatesPage";
@@ -17,42 +18,21 @@ import { AdminNewTemplatePage } from "./pages/admin/AdminNewTemplatePage";
 import { AdminJobsPage } from "./pages/admin/AdminJobsPage";
 
 // Layouts
-import { ShopLayout } from "./layouts/ShopLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
-
-const HomePage = () => (
-  <ShopLayout>
-    <div className="text-center py-20">
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">
-        Professional Videos, <span className="text-blue-600">Instantly</span>
-      </h1>
-      <p className="text-lg text-gray-600 mb-8">
-        Pick a template, customize it, and download your rendered video in minutes.
-      </p>
-      <a
-        href="/templates"
-        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
-      >
-        Browse Templates →
-      </a>
-    </div>
-  </ShopLayout>
-);
 
 const AdminDashboard = () => (
   <AdminLayout>
-    <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
+    <h1 className="text-2xl font-bold text-white mb-2">Dashboard</h1>
     <p className="text-gray-500">Welcome to VlipGo Admin.</p>
   </AdminLayout>
 );
-
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/templates" element={<TemplatesPage />} />
