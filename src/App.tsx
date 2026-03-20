@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useConvexAuth } from "convex/react";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Shop pages
@@ -10,6 +11,7 @@ import { TemplateDetailPage } from "./pages/shop/TemplateDetailPage";
 import { CustomizePage } from "./pages/shop/CustomizePage";
 import { OrdersPage } from "./pages/shop/OrdersPage";
 import { OrderDetailPage } from "./pages/shop/OrderDetailPage";
+import { DashboardPage } from "./pages/shop/DashboardPage";
 
 // Admin pages
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
@@ -27,18 +29,27 @@ const AdminDashboard = () => (
   </AdminLayout>
 );
 
+/** Redirect logged-in users from `/` to `/dashboard` */
+function HomeRoute() {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  if (isLoading) return null;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  return <LandingPage />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<HomeRoute />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/templates" element={<TemplatesPage />} />
         <Route path="/templates/:id" element={<TemplateDetailPage />} />
 
         {/* Customer protected */}
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/templates/:id/customize" element={<ProtectedRoute><CustomizePage /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/orders/:jobId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />

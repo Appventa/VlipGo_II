@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api } from "../../../convex/_generated/api";
 import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
+import { FavoriteButton } from "../../components/ui/FavoriteButton";
 import { formatPrice, cn } from "../../lib/utils";
 import { Search } from "lucide-react";
 
@@ -86,10 +87,10 @@ export function TemplatesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {templates.map((t) => (
+            <div key={t._id} className="relative group">
             <Link
-              key={t._id}
               to={`/templates/${t._id}`}
-              className="group bg-[#1e1e1e] rounded-xl overflow-hidden hover:bg-[#222222] transition-colors"
+              className="block bg-[#1e1e1e] rounded-xl overflow-hidden hover:bg-[#222222] transition-colors"
             >
               <div className="aspect-video bg-[#262626] overflow-hidden">
                 {t.thumbnailUrl ? (
@@ -118,6 +119,10 @@ export function TemplatesPage() {
                 </span>
               </div>
             </Link>
+            <div className="absolute top-2.5 right-2.5">
+              <FavoriteButton templateId={t._id} />
+            </div>
+            </div>
           ))}
         </div>
       )}

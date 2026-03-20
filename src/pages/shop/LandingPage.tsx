@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { ShopLayout } from "../../layouts/ShopLayout";
 import { Button } from "../../components/ui/Button";
+import { FavoriteButton } from "../../components/ui/FavoriteButton";
 import { formatPrice } from "../../lib/utils";
 import { ArrowRight, Clapperboard, Sliders, Download, Zap, ShieldCheck, Star } from "lucide-react";
 
@@ -168,30 +169,34 @@ export function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {featured.map((t) => (
-              <Link
-                key={t._id}
-                to={`/templates/${t._id}`}
-                className="group bg-[#1e1e1e] rounded-xl overflow-hidden hover:bg-[#222222] transition-colors"
-              >
-                <div className="aspect-video bg-[#262626] overflow-hidden">
-                  {t.thumbnailUrl ? (
-                    <img
-                      src={t.thumbnailUrl}
-                      alt={t.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-700 text-xs">No preview</div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-white group-hover:text-[#C3C0FF] transition-colors leading-snug">{t.title}</h3>
-                    <span className="text-sm font-bold text-[#C3C0FF] whitespace-nowrap">{formatPrice(t.price, t.currency)}</span>
+              <div key={t._id} className="relative group">
+                <Link
+                  to={`/templates/${t._id}`}
+                  className="block bg-[#1e1e1e] rounded-xl overflow-hidden hover:bg-[#222222] transition-colors"
+                >
+                  <div className="aspect-video bg-[#262626] overflow-hidden">
+                    {t.thumbnailUrl ? (
+                      <img
+                        src={t.thumbnailUrl}
+                        alt={t.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-700 text-xs">No preview</div>
+                    )}
                   </div>
-                  <span className="inline-block text-xs bg-[#262626] text-gray-500 px-2 py-0.5 rounded-full">{t.category}</span>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h3 className="text-sm font-semibold text-white group-hover:text-[#C3C0FF] transition-colors leading-snug">{t.title}</h3>
+                      <span className="text-sm font-bold text-[#C3C0FF] whitespace-nowrap">{formatPrice(t.price, t.currency)}</span>
+                    </div>
+                    <span className="inline-block text-xs bg-[#262626] text-gray-500 px-2 py-0.5 rounded-full">{t.category}</span>
+                  </div>
+                </Link>
+                <div className="absolute top-2.5 right-2.5">
+                  <FavoriteButton templateId={t._id} />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 

@@ -70,4 +70,11 @@ export default defineSchema({
     fieldId: v.id("templateFields"),
     value: v.string(),
   }).index("by_job", ["jobId"]),
+
+  favorites: defineTable({
+    userId: v.id("users"),
+    templateId: v.id("templates"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_template", ["userId", "templateId"]),
 });

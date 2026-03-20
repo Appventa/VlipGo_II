@@ -5,8 +5,9 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
 import { Button } from "../../components/ui/Button";
+import { FavoriteButton } from "../../components/ui/FavoriteButton";
 import { formatPrice } from "../../lib/utils";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 
 function getYouTubeEmbedId(url: string): string | null {
   const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
@@ -37,6 +38,16 @@ export function TemplateDetailPage() {
 
   return (
     <ShopLayout>
+      {/* ── Back link ── */}
+      <div className="mb-6">
+        <Link
+          to="/templates"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+        >
+          <ArrowLeft size={14} /> All Templates
+        </Link>
+      </div>
+
       {/* ── 2-col hero ── */}
       <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
 
@@ -89,7 +100,10 @@ export function TemplateDetailPage() {
             <span className="text-xs font-semibold uppercase tracking-widest text-[#C3C0FF] mb-3 block">
               Premium Asset
             </span>
-            <h1 className="text-3xl font-bold text-white leading-tight mb-3">{template.title}</h1>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <h1 className="text-3xl font-bold text-white leading-tight">{template.title}</h1>
+              <FavoriteButton templateId={template._id} className="mt-1.5 shrink-0" />
+            </div>
             <p className="text-sm text-gray-400 leading-relaxed">{template.description}</p>
           </div>
 
