@@ -520,42 +520,42 @@ export function AdminNewTemplatePage() {
 
             {/* ── Preview Video ── */}
             <FieldRow label="Preview Video">
+              <input ref={videoFileInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
               {videoPreview ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   <video src={videoPreview} controls className="w-full rounded-xl bg-black" style={{ maxHeight: 180 }} />
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => videoFileInputRef.current?.click()}
                       disabled={videoUploading}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#262626] text-sm text-gray-300 hover:text-white hover:bg-[#333] transition-colors disabled:opacity-50"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#262626] text-sm text-gray-300 hover:text-white hover:bg-[#333] transition-colors disabled:opacity-50"
                     >
-                      <Upload size={13} /> {videoUploading ? "Uploading…" : "Replace"}
+                      <Upload size={12} /> {videoUploading ? "Uploading…" : "Replace"}
                     </button>
                     <button
                       type="button"
                       onClick={clearVideo}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       title="Remove video"
                     >
-                      <X size={13} />
+                      <X size={12} />
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => videoFileInputRef.current?.click()}
                     disabled={videoUploading}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#262626] text-sm text-gray-300 hover:text-white hover:bg-[#333] transition-colors disabled:opacity-50 w-fit"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#262626] text-sm text-gray-300 hover:text-white hover:bg-[#333] transition-colors disabled:opacity-50"
                   >
                     <Film size={13} /> {videoUploading ? "Uploading…" : "Upload video"}
                   </button>
-                  <p className="text-xs text-gray-700">MP4, WebM or MOV. Shown as the template preview to customers.</p>
+                  <p className="text-xs text-gray-700">MP4, WebM or MOV.</p>
                 </div>
               )}
-              <input ref={videoFileInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
             </FieldRow>
 
             {/* ── Publish ── */}
