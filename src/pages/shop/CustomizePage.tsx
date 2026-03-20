@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useMemo, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -7,7 +7,12 @@ import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { formatPrice } from "../../lib/utils";
+import { formatPrice, cn } from "../../lib/utils";
+import {
+  ArrowLeft, ArrowRight, Maximize2,
+  Type, FileImage, Palette,
+  CheckCircle2, UploadCloud,
+} from "lucide-react";
 
 export function CustomizePage() {
   const { id } = useParams<{ id: string }>();
@@ -18,12 +23,16 @@ export function CustomizePage() {
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [dragOver, setDragOver] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const ytId = useMemo(() => {
     if (!template?.previewVideoUrl) return null;
-    const m = template.previewVideoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    const m = template.previewVideoUrl.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
+    );
     return m ? m[1] : null;
   }, [template?.previewVideoUrl]);
 
@@ -35,6 +44,10 @@ export function CustomizePage() {
   }
 
   async function handleImageUpload(fieldId: string, file: File) {
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image must be under 10MB.");
+      return;
+    }
     setUploading((prev) => ({ ...prev, [fieldId]: true }));
     try {
       const uploadUrl = await generateUploadUrl();
@@ -56,15 +69,12 @@ export function CustomizePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    // Validate required fields
     for (const field of template!.fields) {
       if (field.required && !values[field._id]) {
         setError(`"${field.label}" is required.`);
         return;
       }
     }
-
     setLoading(true);
     try {
       const jobId = await createJob({
@@ -83,104 +93,232 @@ export function CustomizePage() {
 
   return (
     <ShopLayout>
-      <div className="max-w-xl mx-auto">
-        {template.previewVideoUrl && (
-          <div className="aspect-video bg-[#1e1e1e] rounded-xl overflow-hidden mb-6">
-            {ytId ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${ytId}?controls=0&rel=0&modestbranding=1`}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+      {/* ── Step progress ── */}
+      <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            1
+          </div>
+          <span className="text-sm font-semibold text-white">Customize</span>
+        </div>
+        <div className="w-16 sm:w-28 h-px bg-[#2a2a2a] mx-3" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-[#262626] border border-[#333] flex items-center justify-center text-gray-600 text-xs font-medium shrink-0">
+            2
+          </div>
+          <span className="text-sm text-gray-600 hidden sm:block">Review</span>
+        </div>
+        <div className="w-16 sm:w-28 h-px bg-[#2a2a2a] mx-3" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-[#262626] border border-[#333] flex items-center justify-center text-gray-600 text-xs font-medium shrink-0">
+            3
+          </div>
+          <span className="text-sm text-gray-600 hidden sm:block">Payment</span>
+        </div>
+      </div>
+
+      {/* ── 2-col layout ── */}
+      <div className="grid lg:grid-cols-[1fr_420px] gap-6 items-start">
+
+        {/* ── Left: Preview ── */}
+        <div>
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#C3C0FF] mb-1">Preview</p>
+              <h1 className="text-2xl font-bold text-white">{template.title}</h1>
+            </div>
+            <button
+              type="button"
+              title="View fullscreen"
+              className="w-9 h-9 rounded-lg bg-[#262626] flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#2e2e2e] transition-colors mt-1 shrink-0"
+            >
+              <Maximize2 size={15} />
+            </button>
+          </div>
+
+          {/* Video / thumbnail */}
+          <div className="aspect-video bg-[#1e1e1e] rounded-xl overflow-hidden">
+            {template.previewVideoUrl ? (
+              ytId ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?controls=0&rel=0&modestbranding=1`}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video src={template.previewVideoUrl} controls className="w-full h-full object-cover" />
+              )
+            ) : template.thumbnailUrl ? (
+              <img src={template.thumbnailUrl} alt={template.title} className="w-full h-full object-cover" />
             ) : (
-              <video src={template.previewVideoUrl} controls className="w-full h-full object-cover" />
+              <div className="w-full h-full flex items-center justify-center text-gray-700 text-sm">No preview available</div>
             )}
           </div>
-        )}
 
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Customize: {template.title}</h1>
-          <p className="text-gray-400 mt-1">Fill in your details below. We'll render a quick preview first.</p>
+          {/* Metadata chips */}
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="bg-[#1e1e1e] rounded-xl px-4 py-3">
+              <p className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-1">Category</p>
+              <p className="text-sm text-white font-medium">{template.category}</p>
+            </div>
+            <div className="bg-[#1e1e1e] rounded-xl px-4 py-3">
+              <p className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-1">Preview</p>
+              <p className="text-sm text-white font-medium">Free Render</p>
+            </div>
+            <div className="bg-[#1e1e1e] rounded-xl px-4 py-3">
+              <p className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-1">Output</p>
+              <p className="text-sm text-white font-medium">Full HD</p>
+            </div>
+          </div>
+
+          {template.description && (
+            <p className="mt-4 text-sm text-gray-500 leading-relaxed">{template.description}</p>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="bg-[#1e1e1e] rounded-xl p-6 flex flex-col gap-5">
+        {/* ── Right: Config panel ── */}
+        <div className="bg-[#1e1e1e] rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-white mb-1">Configure Template</h2>
+          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+            Adjust the properties below to personalize your video. Changes will be reflected in the final export.
+          </p>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {template.fields.map((field) => (
               <div key={field._id}>
-                {field.type === "TEXT" && (
-                  <Input
-                    id={field._id}
-                    label={field.label + (field.required ? " *" : "")}
-                    value={values[field._id] ?? ""}
-                    onChange={(e) => setValue(field._id, e.target.value)}
-                    required={field.required}
-                  />
-                )}
 
-                {field.type === "COLOR" && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-300">
+                {/* TEXT */}
+                {field.type === "TEXT" && (
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor={field._id} className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                      <Type size={13} className="text-[#C3C0FF]" />
                       {field.label}{field.required ? " *" : ""}
                     </label>
-                    <div className="flex items-center gap-3">
+                    <Input
+                      id={field._id}
+                      value={values[field._id] ?? ""}
+                      onChange={(e) => setValue(field._id, e.target.value)}
+                      required={field.required}
+                      placeholder={`Enter ${field.label.toLowerCase()}…`}
+                    />
+                  </div>
+                )}
+
+                {/* COLOR */}
+                {field.type === "COLOR" && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                      <Palette size={13} className="text-[#C3C0FF]" />
+                      {field.label}{field.required ? " *" : ""}
+                    </label>
+                    <div className="flex items-center gap-3 bg-[#262626] rounded-xl px-4 py-3">
                       <input
                         type="color"
-                        value={values[field._id] ?? "#000000"}
+                        value={values[field._id] ?? "#6366f1"}
                         onChange={(e) => setValue(field._id, e.target.value)}
-                        className="h-10 w-16 rounded cursor-pointer bg-[#262626]"
+                        className="h-8 w-12 rounded-lg cursor-pointer bg-transparent border-0 p-0.5"
                       />
-                      <span className="text-sm text-gray-400 font-mono">{values[field._id] ?? "#000000"}</span>
+                      <span className="text-sm text-gray-400 font-mono">{values[field._id] ?? "#6366f1"}</span>
                     </div>
                   </div>
                 )}
 
+                {/* IMAGE — drag-and-drop zone */}
                 {field.type === "IMAGE" && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-300">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                      <FileImage size={13} className="text-[#C3C0FF]" />
                       {field.label}{field.required ? " *" : ""}
                     </label>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          if (file.size > 10 * 1024 * 1024) {
-                            setError("Image must be under 10MB.");
-                            return;
-                          }
-                          handleImageUpload(field._id, file);
-                        }
+                    <div
+                      onClick={() => fileInputRefs.current[field._id]?.click()}
+                      onDragOver={(e) => { e.preventDefault(); setDragOver((p) => ({ ...p, [field._id]: true })); }}
+                      onDragLeave={() => setDragOver((p) => ({ ...p, [field._id]: false }))}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOver((p) => ({ ...p, [field._id]: false }));
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) handleImageUpload(field._id, file);
                       }}
-                      className="text-sm text-gray-400"
-                    />
-                    {uploading[field._id] && <span className="text-xs text-[#C3C0FF]">Uploading…</span>}
-                    {values[field._id] && !uploading[field._id] && (
-                      <span className="text-xs text-green-400">✓ Image ready</span>
-                    )}
+                      className={cn(
+                        "rounded-xl border border-dashed cursor-pointer transition-all",
+                        "flex flex-col items-center justify-center gap-2 py-7",
+                        dragOver[field._id]
+                          ? "border-[#C3C0FF]/60 bg-indigo-600/10"
+                          : values[field._id]
+                            ? "border-green-500/30 bg-green-500/[0.04]"
+                            : "border-[#C3C0FF]/15 bg-[#262626] hover:border-[#C3C0FF]/30"
+                      )}
+                    >
+                      {uploading[field._id] ? (
+                        <>
+                          <UploadCloud size={22} className="text-[#C3C0FF] animate-bounce" />
+                          <p className="text-xs text-[#C3C0FF]">Uploading…</p>
+                        </>
+                      ) : values[field._id] ? (
+                        <>
+                          <CheckCircle2 size={22} className="text-green-400" />
+                          <p className="text-xs text-green-400 font-medium">Image ready</p>
+                          <p className="text-xs text-gray-600">Click to replace</p>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud size={22} className="text-gray-500" />
+                          <p className="text-sm text-gray-400">
+                            Drop your file or{" "}
+                            <span className="text-[#C3C0FF]">Browse</span>
+                          </p>
+                          <p className="text-xs text-gray-600">PNG, JPG, WEBP — max 10MB</p>
+                        </>
+                      )}
+                      <input
+                        ref={(el) => { fileInputRefs.current[field._id] = el; }}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(field._id, file);
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
+
               </div>
             ))}
-          </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && (
+              <p className="text-sm text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{error}</p>
+            )}
 
-          <div className="bg-indigo-600/10 rounded-xl border border-[#C3C0FF]/15 p-4 flex items-center justify-between">
-            <div>
-              <p className="font-semibold text-white">{template.title}</p>
-              <p className="text-sm text-gray-400">One-time payment</p>
+            {/* Pricing */}
+            <div className="bg-indigo-600/10 rounded-xl border border-[#C3C0FF]/15 p-4 flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-white text-sm">{template.title}</p>
+                <p className="text-xs text-gray-500 mt-0.5">One-time · HD render included</p>
+              </div>
+              <span className="text-xl font-bold text-[#C3C0FF]">
+                {formatPrice(template.price, template.currency)}
+              </span>
             </div>
-            <span className="text-2xl font-bold text-[#C3C0FF]">
-              {formatPrice(template.price, template.currency)}
-            </span>
-          </div>
 
-          <Button type="submit" size="lg" loading={loading}>
-            Get Preview →
-          </Button>
-        </form>
+            <Button type="submit" size="lg" loading={loading} className="gap-2">
+              Get Preview <ArrowRight size={16} />
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      {/* ── Bottom nav ── */}
+      <div className="mt-8 pt-5 border-t border-[#1e1e1e]">
+        <Link
+          to={`/templates/${template._id}`}
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+        >
+          <ArrowLeft size={14} /> Back to Template
+        </Link>
       </div>
     </ShopLayout>
   );

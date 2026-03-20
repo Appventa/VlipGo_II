@@ -22,7 +22,6 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
             <img src="/logo.png" alt="VlipGo" className="h-8 w-auto" draggable={false} />
           </Link>
           <nav className="flex items-center gap-1 sm:gap-4">
-            <Link to="/templates" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">Templates</Link>
             {user ? (
               <>
                 <Link to="/orders" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">My Orders</Link>
