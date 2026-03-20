@@ -6,7 +6,7 @@ import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
 import { Button } from "../../components/ui/Button";
 import { FavoriteButton } from "../../components/ui/FavoriteButton";
-import { formatPrice } from "../../lib/utils";
+import { formatPrice, cn } from "../../lib/utils";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 
 function getYouTubeEmbedId(url: string): string | null {
@@ -80,8 +80,16 @@ export function TemplateDetailPage() {
               <p className="text-sm font-semibold text-white">{template.category}</p>
             </div>
             <div className="bg-[#1e1e1e] rounded-xl px-5 py-4">
-              <p className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-1.5">Aspect Ratio</p>
-              <p className="text-sm font-semibold text-white">16:9 (Landscape)</p>
+              <p className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-1.5">Orientation</p>
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "inline-block rounded-[3px] border border-white/30",
+                  (template.orientation ?? "WIDE") === "WIDE" ? "w-5 h-3" : "w-3 h-5"
+                )} />
+                <p className="text-sm font-semibold text-white">
+                  {(template.orientation ?? "WIDE") === "WIDE" ? "Wide · 16:9" : "Vertical · 9:16"}
+                </p>
+              </div>
             </div>
             <div className="bg-[#1e1e1e] rounded-xl px-5 py-4">
               <p className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-1.5">Edit Type</p>
@@ -89,7 +97,9 @@ export function TemplateDetailPage() {
             </div>
             <div className="bg-[#1e1e1e] rounded-xl px-5 py-4">
               <p className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-1.5">Resolution</p>
-              <p className="text-sm font-semibold text-white">1920 × 1080</p>
+              <p className="text-sm font-semibold text-white">
+                {(template.orientation ?? "WIDE") === "WIDE" ? "1920 × 1080" : "1080 × 1920"}
+              </p>
             </div>
           </div>
         </div>

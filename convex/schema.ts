@@ -27,6 +27,7 @@ export default defineSchema({
     nexrenderFinalComposition: v.optional(v.string()),     // HQ final nexrender template ID
     nexrenderFinalCompositionName: v.optional(v.string()), // HQ final AE composition name
     previewVideoUrl: v.optional(v.string()),
+    orientation: v.optional(v.union(v.literal("WIDE"), v.literal("VERTICAL"))),
     isPublished: v.boolean(),
     isArchived: v.boolean(),
   })

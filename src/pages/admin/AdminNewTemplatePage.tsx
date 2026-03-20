@@ -224,6 +224,7 @@ export function AdminNewTemplatePage() {
   const [finalId, setFinalId] = useState("");
   const [finalComp, setFinalComp] = useState("");
   const [previewVideoUrl, setPreviewVideoUrl] = useState("");
+  const [orientation, setOrientation] = useState<"WIDE" | "VERTICAL">("WIDE");
   const [isPublished, setIsPublished] = useState(false);
   const [thumbnailStorageId, setThumbnailStorageId] = useState("");
   const [thumbnailPreview, setThumbnailPreview] = useState("");
@@ -250,6 +251,7 @@ export function AdminNewTemplatePage() {
     setFinalId(existing.nexrenderFinalComposition ?? "");
     setFinalComp(existing.nexrenderFinalCompositionName ?? "");
     setPreviewVideoUrl(existing.previewVideoUrl ?? "");
+    setOrientation((existing.orientation as "WIDE" | "VERTICAL") ?? "WIDE");
     setIsPublished(existing.isPublished);
     setThumbnailStorageId(existing.thumbnailUrl ?? "");
     setThumbnailPreview(existing.thumbnailUrl ?? "");
@@ -319,6 +321,7 @@ export function AdminNewTemplatePage() {
         nexrenderFinalComposition: finalId || undefined,
         nexrenderFinalCompositionName: finalComp || undefined,
         previewVideoUrl: previewVideoUrl || undefined,
+        orientation,
         isPublished,
         thumbnailUrl: thumbnailStorageId || undefined,
         fields: fields.map((f) => ({
@@ -365,6 +368,48 @@ export function AdminNewTemplatePage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
+          {/* ── Orientation ── */}
+          <SectionCard title="Video Orientation">
+            <div className="flex gap-4">
+              {(["WIDE", "VERTICAL"] as const).map((o) => {
+                const isActive = orientation === o;
+                const isWide = o === "WIDE";
+                return (
+                  <button
+                    key={o}
+                    type="button"
+                    onClick={() => setOrientation(o)}
+                    className={cn(
+                      "flex-1 flex flex-col items-center gap-3 py-4 rounded-xl border-2 transition-all",
+                      isActive
+                        ? "border-[#C3C0FF]/60 bg-indigo-600/10"
+                        : "border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]"
+                    )}
+                  >
+                    {/* Aspect ratio visual */}
+                    <div className={cn(
+                      "rounded border-2 flex items-center justify-center",
+                      isActive ? "border-[#C3C0FF]/60" : "border-[#444]",
+                      isWide ? "w-20 h-12" : "w-10 h-16"
+                    )}>
+                      <span className={cn("text-[10px] font-bold", isActive ? "text-[#C3C0FF]" : "text-gray-600")}>
+                        {isWide ? "16:9" : "9:16"}
+                      </span>
+                    </div>
+                    <div className="text-center">
+                      <p className={cn("text-sm font-semibold", isActive ? "text-white" : "text-gray-500")}>
+                        {isWide ? "Wide" : "Vertical"}
+                      </p>
+                      <p className={cn("text-xs mt-0.5", isActive ? "text-[#C3C0FF]/70" : "text-gray-700")}>
+                        {isWide ? "Landscape · 1920×1080" : "Portrait · 1080×1920"}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </SectionCard>
 
           {/* ── Template Info ── */}
           <SectionCard title="Template Info">

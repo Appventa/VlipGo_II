@@ -8,13 +8,17 @@ import { FavoriteButton } from "../../components/ui/FavoriteButton";
 import { formatPrice, cn } from "../../lib/utils";
 import { Search } from "lucide-react";
 
+type Orientation = "WIDE" | "VERTICAL";
+
 export function TemplatesPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [orientation, setOrientation] = useState<Orientation | "">("");
 
   const templates = useQuery(api.templates.listPublished, {
     search: search || undefined,
     category: category || undefined,
+    orientation: orientation || undefined,
   });
   const categories = useQuery(api.templates.listCategories);
 
@@ -44,6 +48,33 @@ export function TemplatesPage() {
             className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#1e1e1e] text-white placeholder:text-gray-600 text-sm focus:outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
           />
         </div>
+      </div>
+
+      {/* Orientation toggle */}
+      <div className="flex items-center justify-center gap-3 mb-6">
+        {([["", "All"], ["WIDE", "Wide  16:9"], ["VERTICAL", "Vertical  9:16"]] as [Orientation | "", string][]).map(([val, label]) => {
+          const active = orientation === val;
+          return (
+            <button
+              key={val}
+              onClick={() => setOrientation(val)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+                active
+                  ? "bg-indigo-600/20 text-[#C3C0FF] ring-1 ring-[#C3C0FF]/30"
+                  : "bg-[#1e1e1e] text-gray-500 hover:text-gray-300 hover:bg-[#262626]"
+              )}
+            >
+              {val === "WIDE" && (
+                <span className={cn("inline-block w-5 h-3 rounded-[3px] border", active ? "border-[#C3C0FF]/60" : "border-[#444]")} />
+              )}
+              {val === "VERTICAL" && (
+                <span className={cn("inline-block w-3 h-5 rounded-[3px] border", active ? "border-[#C3C0FF]/60" : "border-[#444]")} />
+              )}
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Category pills */}
@@ -92,7 +123,7 @@ export function TemplatesPage() {
               to={`/templates/${t._id}`}
               className="block bg-[#1e1e1e] rounded-xl overflow-hidden hover:bg-[#222222] transition-colors"
             >
-              <div className="aspect-video bg-[#262626] overflow-hidden">
+              <div className="aspect-video bg-[#262626] overflow-hidden relative">
                 {t.thumbnailUrl ? (
                   <img
                     src={t.thumbnailUrl}
@@ -104,6 +135,16 @@ export function TemplatesPage() {
                     No preview
                   </div>
                 )}
+                {/* Orientation badge */}
+                <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
+                  <span className={cn(
+                    "inline-block rounded-[2px] border border-white/40",
+                    (t.orientation ?? "WIDE") === "WIDE" ? "w-3.5 h-2" : "w-2 h-3.5"
+                  )} />
+                  <span className="text-[10px] text-white/70 font-medium">
+                    {(t.orientation ?? "WIDE") === "WIDE" ? "16:9" : "9:16"}
+                  </span>
+                </div>
               </div>
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-1.5">

@@ -15,13 +15,17 @@ export const listPublished = query({
   args: {
     category: v.optional(v.string()),
     search: v.optional(v.string()),
+    orientation: v.optional(v.union(v.literal("WIDE"), v.literal("VERTICAL"))),
   },
-  handler: async (ctx, { category, search }) => {
+  handler: async (ctx, { category, search, orientation }) => {
     let templates = await ctx.db
       .query("templates")
       .withIndex("by_published", (q) => q.eq("isPublished", true).eq("isArchived", false))
       .collect();
 
+    if (orientation) {
+      templates = templates.filter((t) => (t.orientation ?? "WIDE") === orientation);
+    }
     if (category) {
       templates = templates.filter((t) => t.category === category);
     }
@@ -148,6 +152,7 @@ export const upsert = mutation({
     nexrenderFinalComposition: v.optional(v.string()),
     nexrenderFinalCompositionName: v.optional(v.string()),
     previewVideoUrl: v.optional(v.string()),
+    orientation: v.optional(v.union(v.literal("WIDE"), v.literal("VERTICAL"))),
     isPublished: v.boolean(),
     fields: v.array(
       v.object({
