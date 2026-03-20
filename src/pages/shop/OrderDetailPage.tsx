@@ -5,6 +5,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
+import { useCreditsModal } from "../../contexts/CreditsModalContext";
 import { cn } from "../../lib/utils";
 import { Download, AlertCircle, Clock, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
 
@@ -20,6 +21,7 @@ export function OrderDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const job = useQuery(api.jobs.getById, { jobId: jobId as Id<"jobs"> });
   const approvePreview = useMutation(api.jobs.approvePreview);
+  const { openBuyCredits } = useCreditsModal();
   const [approving, setApproving] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -52,6 +54,10 @@ export function OrderDetailPage() {
     setApproving(true);
     try {
       await approvePreview({ jobId: job!._id });
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("INSUFFICIENT_CREDITS")) {
+        openBuyCredits();
+      }
     } finally {
       setApproving(false);
     }

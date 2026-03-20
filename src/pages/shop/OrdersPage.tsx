@@ -5,6 +5,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
+import { useCreditsModal } from "../../contexts/CreditsModalContext";
 import { cn } from "../../lib/utils";
 import { Play, Loader2, X, Film } from "lucide-react";
 
@@ -49,6 +50,7 @@ function PreviewModal({ url, onClose }: { url: string; onClose: () => void }) {
 export function OrdersPage() {
   const jobs = useQuery(api.jobs.listByUser);
   const approvePreview = useMutation(api.jobs.approvePreview);
+  const { openBuyCredits } = useCreditsModal();
   const navigate = useNavigate();
   const [watchUrl, setWatchUrl] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -57,6 +59,10 @@ export function OrdersPage() {
     setApprovingId(jobId);
     try {
       await approvePreview({ jobId });
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("INSUFFICIENT_CREDITS")) {
+        openBuyCredits();
+      }
     } finally {
       setApprovingId(null);
     }
