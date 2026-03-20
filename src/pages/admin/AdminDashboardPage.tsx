@@ -7,7 +7,7 @@ import { cn } from "../../lib/utils";
 import {
   FileVideo, Users, Film, Loader2, CheckCircle2, AlertCircle,
   Clock, ArrowRight, RotateCcw, ExternalLink, PlusCircle, Briefcase,
-  Activity,
+  Activity, EyeOff,
 } from "lucide-react";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -109,6 +109,17 @@ export function AdminDashboardPage() {
               </Link>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Draft templates banner ── */}
+      {(stats?.draftTemplates ?? 0) > 0 && (
+        <div className="mb-4 flex items-center gap-3 bg-amber-500/[0.07] rounded-xl px-4 py-3">
+          <EyeOff size={15} className="text-amber-400 shrink-0" />
+          <p className="text-sm text-amber-300 flex-1">
+            <span className="font-semibold">{stats!.draftTemplates} template{stats!.draftTemplates > 1 ? "s" : ""}</span> in draft — not visible to customers.{" "}
+            <Link to="/admin/templates" className="underline hover:no-underline">Review drafts →</Link>
+          </p>
         </div>
       )}
 

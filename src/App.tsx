@@ -22,6 +22,7 @@ import { AdminNewTemplatePage } from "./pages/admin/AdminNewTemplatePage";
 import { AdminJobsPage } from "./pages/admin/AdminJobsPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminUserDetailPage } from "./pages/admin/AdminUserDetailPage";
+import { AdminMediaPage } from "./pages/admin/AdminMediaPage";
 
 /** Redirect logged-in users from `/` to `/dashboard` */
 function HomeRoute() {
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="/admin/jobs" element={<ProtectedRoute requiredRole="ADMIN"><AdminJobsPage /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute requiredRole="ADMIN"><AdminUsersPage /></ProtectedRoute>} />
         <Route path="/admin/users/:userId" element={<ProtectedRoute requiredRole="ADMIN"><AdminUserDetailPage /></ProtectedRoute>} />
+        <Route path="/admin/media" element={<ProtectedRoute requiredRole="ADMIN"><AdminMediaPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

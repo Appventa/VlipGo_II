@@ -293,6 +293,7 @@ export const getAdminStats = query({
       errorJobs:          allJobs.filter((j) => j.renderStatus === "ERROR").length,
       totalTemplates:     allTemplates.filter((t) => !t.isArchived).length,
       publishedTemplates: allTemplates.filter((t) => t.isPublished && !t.isArchived).length,
+      draftTemplates:     allTemplates.filter((t) => !t.isPublished && !t.isArchived).length,
       totalCustomers:     allUsers.filter((u) => u.role === "CUSTOMER").length,
     };
   },

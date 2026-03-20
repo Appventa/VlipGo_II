@@ -1,13 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/ui/Loading";
-import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { cn } from "../../lib/utils";
+import { Plus, Trash2, GripVertical, Upload, X, ImageIcon } from "lucide-react";
 
 type FieldType = "TEXT" | "IMAGE" | "COLOR";
 
@@ -23,6 +22,33 @@ function emptyField(order: number): FieldDraft {
   return { label: "", type: "TEXT", nexrenderLayer: "", required: true, order };
 }
 
+const FIELD_TYPE_COLOR: Record<FieldType, string> = {
+  TEXT:  "bg-indigo-500/10 text-[#C3C0FF] border-indigo-500/20",
+  IMAGE: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  COLOR: "bg-green-500/10 text-green-400 border-green-500/20",
+};
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-[#1e1e1e] rounded-2xl p-6 flex flex-col gap-5">
+      <h2 className="text-sm font-semibold uppercase tracking-widest text-[#C3C0FF]">{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-gray-500">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const inputCls = "w-full bg-[#262626] rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 transition-all";
+const selectCls = `${inputCls} cursor-pointer`;
+
 export function AdminNewTemplatePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -32,6 +58,7 @@ export function AdminNewTemplatePage() {
     api.templates.getByIdAdmin,
     id ? { templateId: id as Id<"templates"> } : "skip"
   );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -39,15 +66,14 @@ export function AdminNewTemplatePage() {
   const [tags, setTags] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
-  // LQ preview nexrender fields
   const [previewId, setPreviewId] = useState("");
   const [previewComp, setPreviewComp] = useState("");
-  // HQ final nexrender fields
   const [finalId, setFinalId] = useState("");
   const [finalComp, setFinalComp] = useState("");
   const [previewVideoUrl, setPreviewVideoUrl] = useState("");
   const [isPublished, setIsPublished] = useState(false);
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailStorageId, setThumbnailStorageId] = useState(""); // raw ID sent to backend
+  const [thumbnailPreview, setThumbnailPreview] = useState(""); // URL for display
   const [fields, setFields] = useState<FieldDraft[]>([emptyField(0)]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -60,7 +86,7 @@ export function AdminNewTemplatePage() {
     setDescription(existing.description);
     setCategory(existing.category);
     setTags(existing.tags.join(", "));
-    setPrice(String(existing.price));
+    setPrice(String(existing.price / 100));
     setCurrency(existing.currency);
     setPreviewId(existing.nexrenderComposition);
     setPreviewComp(existing.nexrenderCompositionName ?? "");
@@ -68,7 +94,9 @@ export function AdminNewTemplatePage() {
     setFinalComp(existing.nexrenderFinalCompositionName ?? "");
     setPreviewVideoUrl(existing.previewVideoUrl ?? "");
     setIsPublished(existing.isPublished);
-    setThumbnailUrl(existing.thumbnailUrl ?? "");
+    // thumbnailUrl is already resolved to http URL by getByIdAdmin
+    setThumbnailStorageId(existing.thumbnailUrl ?? "");
+    setThumbnailPreview(existing.thumbnailUrl ?? "");
     setFields(existing.fields.map((f) => ({
       label: f.label,
       type: f.type,
@@ -82,22 +110,30 @@ export function AdminNewTemplatePage() {
   async function handleThumbnailUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Show local preview immediately
+    setThumbnailPreview(URL.createObjectURL(file));
     setUploading(true);
     try {
       const uploadUrl = await generateUploadUrl();
       const res = await fetch(uploadUrl, { method: "POST", body: file, headers: { "Content-Type": file.type } });
       const { storageId } = await res.json();
-      setThumbnailUrl(storageId);
+      setThumbnailStorageId(storageId);
     } finally {
       setUploading(false);
     }
+  }
+
+  function clearThumbnail() {
+    setThumbnailStorageId("");
+    setThumbnailPreview("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (!title || !category || !previewId || !price) {
-      setError("Please fill in all required fields.");
+      setError("Please fill in all required fields (title, category, nexrender template ID, price).");
       return;
     }
     setLoading(true);
@@ -116,7 +152,7 @@ export function AdminNewTemplatePage() {
         nexrenderFinalCompositionName: finalComp || undefined,
         previewVideoUrl: previewVideoUrl || undefined,
         isPublished,
-        thumbnailUrl: thumbnailUrl || undefined,
+        thumbnailUrl: thumbnailStorageId || undefined,
         fields,
       });
       navigate("/admin/templates");
@@ -144,164 +180,281 @@ export function AdminNewTemplatePage() {
   return (
     <AdminLayout>
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-white mb-6">{id ? "Edit Template" : "New Template"}</h1>
+        {/* Header */}
+        <div className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#C3C0FF] mb-1">
+            {id ? "Edit" : "Create"}
+          </p>
+          <h1 className="text-2xl font-bold text-white">{id ? "Edit Template" : "New Template"}</h1>
+        </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {/* Metadata */}
-          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6 flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-300">Template Info</h2>
-            <Input id="title" label="Title *" value={title} onChange={(e) => setTitle(e.target.value)} required />
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-300">Description</label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
+          {/* ── Template Info ── */}
+          <SectionCard title="Template Info">
+            <FieldRow label="Title *">
+              <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Corporate Promo" className={inputCls} />
+            </FieldRow>
+            <FieldRow label="Description">
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="block w-full rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-600"
+                placeholder="Brief description shown to customers…"
+                className={`${inputCls} resize-none`}
               />
+            </FieldRow>
+            <div className="grid grid-cols-2 gap-4">
+              <FieldRow label="Category *">
+                <input value={category} onChange={(e) => setCategory(e.target.value)} required placeholder="e.g. Corporate" className={inputCls} />
+              </FieldRow>
+              <FieldRow label="Tags (comma-separated)">
+                <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="promo, business, clean" className={inputCls} />
+              </FieldRow>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Input id="category" label="Category *" value={category} onChange={(e) => setCategory(e.target.value)} required />
-              <Input id="tags" label="Tags (comma-separated)" value={tags} onChange={(e) => setTags(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input id="price" label="Price (e.g. 29.99) *" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-300">Currency</label>
-                <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="block w-full rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <FieldRow label="Price *">
+                <input
+                  type="number" min="0" step="0.01"
+                  value={price} onChange={(e) => setPrice(e.target.value)}
+                  required placeholder="29.99"
+                  className={inputCls}
+                />
+              </FieldRow>
+              <FieldRow label="Currency">
+                <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={selectCls}>
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                   <option value="GBP">GBP</option>
                 </select>
+              </FieldRow>
+            </div>
+
+            {/* ── Thumbnail ── */}
+            <FieldRow label="Thumbnail">
+              <div className="flex items-center gap-4">
+                {/* Preview box */}
+                <div className={cn(
+                  "w-24 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center",
+                  thumbnailPreview ? "bg-[#262626]" : "bg-[#262626] border-2 border-dashed border-white/10"
+                )}>
+                  {thumbnailPreview ? (
+                    <img src={thumbnailPreview} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon size={18} className="text-gray-600" />
+                  )}
+                </div>
+
+                {/* Upload controls */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#262626] text-sm text-gray-300 hover:text-white hover:bg-[#333] transition-colors disabled:opacity-50"
+                    >
+                      <Upload size={13} />
+                      {uploading ? "Uploading…" : thumbnailPreview ? "Change" : "Upload image"}
+                    </button>
+                    {thumbnailPreview && !uploading && (
+                      <button
+                        type="button"
+                        onClick={clearThumbnail}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        title="Remove thumbnail"
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-700">JPG, PNG or WebP. Recommended: 16:9 ratio.</p>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleThumbnailUpload}
+                  className="hidden"
+                />
               </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-300">Thumbnail</label>
-              <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="text-sm text-gray-400" />
-              {uploading && <span className="text-xs text-blue-400">Uploading…</span>}
-              {thumbnailUrl && !uploading && <span className="text-xs text-green-400">✓ Thumbnail saved</span>}
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-300">Preview Video URL</label>
+            </FieldRow>
+
+            {/* ── Preview Video ── */}
+            <FieldRow label="Preview Video URL">
               <input
                 type="url"
                 value={previewVideoUrl}
                 onChange={(e) => setPreviewVideoUrl(e.target.value)}
                 placeholder="https://www.youtube.com/watch?v=... or direct .mp4 URL"
-                className="block w-full rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-600"
+                className={inputCls}
               />
-              <p className="text-xs text-gray-600">YouTube must be set to <span className="text-gray-500">Unlisted</span> (not Private) for embedding to work.</p>
-            </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="rounded" />
-              <span className="font-medium text-gray-300">Publish immediately</span>
-            </label>
-          </div>
+              <p className="text-xs text-gray-700 mt-1">YouTube must be <span className="text-gray-500">Unlisted</span> (not Private) for embedding.</p>
+            </FieldRow>
 
-          {/* Nexrender Templates */}
-          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6 flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-300">Nexrender Templates</h2>
-            <p className="text-xs text-gray-500">Two separate nexrender templates are needed — one rendered in LQ for the customer preview, one in full HQ for the final download.</p>
+            {/* ── Publish ── */}
+            <label className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors",
+              isPublished ? "bg-green-500/10" : "bg-[#262626] hover:bg-[#2a2a2a]"
+            )}>
+              <div className={cn(
+                "w-4 h-4 rounded flex items-center justify-center shrink-0",
+                isPublished ? "bg-green-500" : "bg-[#3a3a3a] border border-white/10"
+              )}>
+                {isPublished && <span className="text-white text-[10px] font-bold">✓</span>}
+              </div>
+              <input
+                type="checkbox"
+                checked={isPublished}
+                onChange={(e) => setIsPublished(e.target.checked)}
+                className="hidden"
+              />
+              <div>
+                <p className={cn("text-sm font-medium", isPublished ? "text-green-400" : "text-gray-400")}>
+                  Publish immediately
+                </p>
+                <p className="text-xs text-gray-600">
+                  {isPublished ? "Visible to customers in the template catalog" : "Saved as draft — not visible to customers"}
+                </p>
+              </div>
+            </label>
+          </SectionCard>
+
+          {/* ── Nexrender Templates ── */}
+          <SectionCard title="Nexrender Templates">
+            <p className="text-xs text-gray-600 -mt-2">Two separate nexrender templates — LQ preview for customer approval, HQ final for delivery.</p>
 
             {/* LQ Preview */}
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.07] p-4 flex flex-col gap-3">
-              <p className="text-sm font-semibold text-amber-400">LQ Preview Template</p>
+            <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-4 flex flex-col gap-3">
+              <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">LQ Preview</p>
               <div className="grid grid-cols-2 gap-3">
-                <Input
-                  id="previewId"
-                  label="Nexrender Template ID *"
-                  value={previewId}
-                  onChange={(e) => setPreviewId(e.target.value)}
-                  required
-                  placeholder="e.g. 01KM17B27C6WY65ZRVF91GFBV8"
-                />
-                <Input
-                  id="previewComp"
-                  label="AE Composition Name"
-                  value={previewComp}
-                  onChange={(e) => setPreviewComp(e.target.value)}
-                  placeholder="e.g. TestCompHD_Preview"
-                />
+                <FieldRow label="Nexrender Template ID *">
+                  <input
+                    value={previewId}
+                    onChange={(e) => setPreviewId(e.target.value)}
+                    required
+                    placeholder="e.g. 01KM17B27C6WY…"
+                    className={inputCls}
+                  />
+                </FieldRow>
+                <FieldRow label="AE Composition Name">
+                  <input
+                    value={previewComp}
+                    onChange={(e) => setPreviewComp(e.target.value)}
+                    placeholder="e.g. TestCompHD_Preview"
+                    className={inputCls}
+                  />
+                </FieldRow>
               </div>
             </div>
 
             {/* HQ Final */}
-            <div className="rounded-lg border border-green-500/30 bg-green-500/[0.07] p-4 flex flex-col gap-3">
-              <p className="text-sm font-semibold text-green-400">HQ Final Template</p>
+            <div className="rounded-xl bg-green-500/[0.06] border border-green-500/20 p-4 flex flex-col gap-3">
+              <p className="text-xs font-semibold text-green-400 uppercase tracking-wider">HQ Final</p>
               <div className="grid grid-cols-2 gap-3">
-                <Input
-                  id="finalId"
-                  label="Nexrender Template ID"
-                  value={finalId}
-                  onChange={(e) => setFinalId(e.target.value)}
-                  placeholder="e.g. 01KM17B27C6WY65ZRVF91GFBV9"
-                />
-                <Input
-                  id="finalComp"
-                  label="AE Composition Name"
-                  value={finalComp}
-                  onChange={(e) => setFinalComp(e.target.value)}
-                  placeholder="e.g. TestCompHD"
-                />
+                <FieldRow label="Nexrender Template ID">
+                  <input
+                    value={finalId}
+                    onChange={(e) => setFinalId(e.target.value)}
+                    placeholder="e.g. 01KM17B27C6WY…"
+                    className={inputCls}
+                  />
+                </FieldRow>
+                <FieldRow label="AE Composition Name">
+                  <input
+                    value={finalComp}
+                    onChange={(e) => setFinalComp(e.target.value)}
+                    placeholder="e.g. TestCompHD"
+                    className={inputCls}
+                  />
+                </FieldRow>
               </div>
               {!finalId && (
-                <p className="text-xs text-green-400/80">⚠ If left empty, the LQ preview template will be used as fallback for HD renders.</p>
+                <p className="text-xs text-green-500/60">If left empty, the LQ preview template is used as fallback for HD renders.</p>
               )}
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Fields */}
-          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-300">Customization Fields</h2>
-              <Button type="button" variant="secondary" size="sm" onClick={addField}>
-                <Plus size={14} className="mr-1" /> Add Field
-              </Button>
-            </div>
-            <div className="flex flex-col gap-3">
+          {/* ── Customization Fields ── */}
+          <SectionCard title="Customization Fields">
+            <div className="flex flex-col gap-2.5">
               {fields.map((f, i) => (
-                <div key={i} className="flex items-start gap-2 p-3 bg-[#242424] rounded-lg">
-                  <GripVertical size={16} className="mt-2 text-gray-600 flex-shrink-0" />
-                  <div className="flex-1 grid grid-cols-2 gap-2">
+                <div key={i} className="flex items-start gap-2.5 p-3.5 bg-[#262626] rounded-xl">
+                  <GripVertical size={15} className="mt-2.5 text-gray-600 flex-shrink-0" />
+                  <div className="flex-1 grid grid-cols-2 gap-2.5">
                     <input
                       placeholder="Label *"
                       value={f.label}
                       onChange={(e) => updateField(i, { label: e.target.value })}
-                      className="rounded border border-white/[0.12] bg-[#1a1a1a] text-white px-2 py-1 text-sm placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
                     />
                     <input
                       placeholder="AE Layer name *"
                       value={f.nexrenderLayer}
                       onChange={(e) => updateField(i, { nexrenderLayer: e.target.value })}
-                      className="rounded border border-white/[0.12] bg-[#1a1a1a] text-white px-2 py-1 text-sm placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
                     />
                     <select
                       value={f.type}
                       onChange={(e) => updateField(i, { type: e.target.value as FieldType })}
-                      className="rounded border border-white/[0.12] bg-[#1a1a1a] text-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className={cn("bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 border", FIELD_TYPE_COLOR[f.type])}
                     >
                       <option value="TEXT">TEXT</option>
                       <option value="IMAGE">IMAGE</option>
                       <option value="COLOR">COLOR</option>
                     </select>
-                    <label className="flex items-center gap-1 text-sm text-gray-300">
-                      <input type="checkbox" checked={f.required} onChange={(e) => updateField(i, { required: e.target.checked })} />
+                    <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                      <div className={cn(
+                        "w-4 h-4 rounded flex items-center justify-center shrink-0",
+                        f.required ? "bg-indigo-500" : "bg-[#333] border border-white/10"
+                      )}>
+                        {f.required && <span className="text-white text-[9px] font-bold">✓</span>}
+                      </div>
+                      <input type="checkbox" checked={f.required} onChange={(e) => updateField(i, { required: e.target.checked })} className="hidden" />
                       Required
                     </label>
                   </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => removeField(i)}>
-                    <Trash2 size={14} className="text-red-400" />
-                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => removeField(i)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors mt-0.5"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               ))}
+              <button
+                type="button"
+                onClick={addField}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/10 text-sm text-gray-600 hover:text-gray-300 hover:border-white/20 transition-colors mt-1"
+              >
+                <Plus size={13} /> Add Field
+              </button>
             </div>
-          </div>
+          </SectionCard>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
 
-          <div className="flex gap-3">
-            <Button type="submit" loading={loading} size="lg">{id ? "Save Changes" : "Create Template"}</Button>
-            <Button type="button" variant="secondary" size="lg" onClick={() => navigate("/admin/templates")}>Cancel</Button>
+          <div className="flex gap-3 pb-8">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-b from-indigo-500 to-indigo-600 hover:brightness-110 active:scale-[0.98] text-sm font-semibold text-white transition-all disabled:opacity-50"
+            >
+              {loading ? "Saving…" : id ? "Save Changes" : "Create Template"}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/templates")}
+              className="px-6 py-3 rounded-xl bg-[#262626] text-sm font-medium text-gray-400 hover:text-white hover:bg-[#333] transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>

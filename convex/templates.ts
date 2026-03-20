@@ -77,7 +77,13 @@ export const listAll = query({
     if (!userId) throw new Error("Unauthenticated");
     const user = await ctx.db.get(userId);
     if (user?.role !== "ADMIN") throw new Error("Forbidden");
-    return ctx.db.query("templates").order("desc").collect();
+    const templates = await ctx.db.query("templates").order("desc").collect();
+    return Promise.all(
+      templates.map(async (t) => ({
+        ...t,
+        thumbnailUrl: await resolveThumb(ctx, t.thumbnailUrl),
+      }))
+    );
   },
 });
 
@@ -95,7 +101,33 @@ export const getByIdAdmin = query({
       .withIndex("by_template", (q) => q.eq("templateId", templateId))
       .collect();
     fields.sort((a, b) => a.order - b.order);
-    return { ...template, fields };
+    return {
+      ...template,
+      thumbnailUrl: await resolveThumb(ctx, template.thumbnailUrl),
+      fields,
+    };
+  },
+});
+
+/** Admin: all templates that have a thumbnail, for the Media Assets page */
+export const listMediaAssets = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthenticated");
+    const user = await ctx.db.get(userId);
+    if (user?.role !== "ADMIN") throw new Error("Forbidden");
+    const templates = await ctx.db.query("templates").order("desc").collect();
+    const withThumbs = templates.filter((t) => t.thumbnailUrl);
+    return Promise.all(
+      withThumbs.map(async (t) => ({
+        _id: t._id,
+        title: t.title,
+        isPublished: t.isPublished,
+        isArchived: t.isArchived,
+        thumbnailUrl: await resolveThumb(ctx, t.thumbnailUrl),
+      }))
+    );
   },
 });
 
