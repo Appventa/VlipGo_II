@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as favorites from "../favorites.js";
 import type * as http from "../http.js";
 import type * as jobs from "../jobs.js";
 import type * as nexrender from "../nexrender.js";
@@ -23,6 +24,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  favorites: typeof favorites;
   http: typeof http;
   jobs: typeof jobs;
   nexrender: typeof nexrender;
