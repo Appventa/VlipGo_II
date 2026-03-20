@@ -6,7 +6,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { ShopLayout } from "../../layouts/ShopLayout";
 import { Loading } from "../../components/ui/Loading";
 import { cn } from "../../lib/utils";
-import { Play, Loader2, X } from "lucide-react";
+import { Play, Loader2, X, Film } from "lucide-react";
 
 const statusColor: Record<string, string> = {
   QUEUED: "bg-[#262626] text-gray-400",
@@ -88,15 +88,30 @@ export function OrdersPage() {
                 )}
               >
                 <div className="flex items-center justify-between">
-                  {/* Left: title + date */}
+                  {/* Left: thumbnail + title + date */}
                   <button
                     onClick={() => navigate(`/orders/${job._id}`)}
-                    className="text-left flex-1 min-w-0 mr-3"
+                    className="text-left flex-1 min-w-0 mr-3 flex items-center gap-3"
                   >
-                    <p className="font-semibold text-white truncate">{job.templateTitle}</p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      {new Date(job._creationTime).toLocaleDateString()}
-                    </p>
+                    <div className="w-16 h-10 rounded-lg overflow-hidden bg-[#262626] shrink-0">
+                      {job.templateThumbnailUrl ? (
+                        <img
+                          src={job.templateThumbnailUrl}
+                          alt={job.templateTitle}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Film size={13} className="text-gray-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white truncate">{job.templateTitle}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {new Date(job._creationTime).toLocaleDateString()}
+                      </p>
+                    </div>
                   </button>
 
                   {/* Right: badge + actions */}

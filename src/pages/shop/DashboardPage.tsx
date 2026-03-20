@@ -118,15 +118,20 @@ export function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2.5">
               {recentJobs.map((job) => (
                 <Link
                   key={job._id}
                   to={`/orders/${job._id}`}
-                  className="flex items-center gap-3.5 p-3 rounded-xl hover:bg-[#262626] transition-colors group"
+                  className={cn(
+                    "flex items-center gap-3.5 bg-[#262626] rounded-xl p-3 transition-all group",
+                    job.renderStatus === "PREVIEW_READY"
+                      ? "ring-1 ring-amber-500/30"
+                      : "hover:bg-[#2a2a2a]"
+                  )}
                 >
                   {/* Thumbnail */}
-                  <div className="w-16 h-10 rounded-lg overflow-hidden bg-[#262626] shrink-0">
+                  <div className="w-16 h-10 rounded-lg overflow-hidden bg-[#333] shrink-0">
                     {job.templateThumbnailUrl ? (
                       <img
                         src={job.templateThumbnailUrl}
@@ -141,15 +146,15 @@ export function DashboardPage() {
                   </div>
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate group-hover:text-[#C3C0FF] transition-colors leading-snug">
+                    <p className="text-sm font-semibold text-white truncate group-hover:text-[#C3C0FF] transition-colors leading-snug">
                       {job.templateTitle}
                     </p>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-1.5 mt-0.5">
                       {job.templateCategory && (
-                        <span className="text-xs text-gray-600 truncate">{job.templateCategory}</span>
+                        <span className="text-xs text-gray-500 truncate">{job.templateCategory}</span>
                       )}
                       <span className="text-xs text-gray-700">·</span>
-                      <span className="text-xs text-gray-600">{timeAgo(job._creationTime)}</span>
+                      <span className="text-xs text-gray-500">{timeAgo(job._creationTime)}</span>
                     </div>
                   </div>
                   {/* Status */}
