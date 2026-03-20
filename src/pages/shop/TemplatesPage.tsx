@@ -33,13 +33,13 @@ export function TemplatesPage() {
             placeholder="Search templates…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white placeholder:text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-4 py-2 rounded-lg bg-[#262626] text-white placeholder:text-gray-600 text-sm focus:outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
           />
         </div>
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-white/[0.12] bg-[#1a1a1a] text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 rounded-lg bg-[#262626] text-white text-sm focus:outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
         >
           <option value="">All categories</option>
           {categories?.map((c) => (
@@ -60,9 +60,9 @@ export function TemplatesPage() {
             <Link
               key={t._id}
               to={`/templates/${t._id}`}
-              className="group bg-[#1a1a1a] rounded-xl border border-white/[0.08] overflow-hidden hover:border-white/[0.16] transition-colors"
+              className="group bg-[#1e1e1e] rounded-xl overflow-hidden hover:bg-[#222222] transition-colors"
             >
-              <div className="aspect-video bg-[#242424] overflow-hidden">
+              <div className="aspect-video bg-[#262626] overflow-hidden">
                 {t.thumbnailUrl ? (
                   <img
                     src={t.thumbnailUrl}
@@ -77,12 +77,12 @@ export function TemplatesPage() {
               </div>
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors">{t.title}</h3>
-                  <span className="text-sm font-bold text-blue-400 whitespace-nowrap">
+                  <h3 className="font-semibold text-white group-hover:text-[#C3C0FF] transition-colors">{t.title}</h3>
+                  <span className="text-sm font-bold text-[#C3C0FF] whitespace-nowrap">
                     {formatPrice(t.price, t.currency)}
                   </span>
                 </div>
-                <span className="inline-block text-xs bg-white/[0.08] text-gray-400 px-2 py-0.5 rounded-full">
+                <span className="inline-block text-xs bg-[#262626] text-gray-500 px-2 py-0.5 rounded-full">
                   {t.category}
                 </span>
               </div>

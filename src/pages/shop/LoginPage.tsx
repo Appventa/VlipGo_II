@@ -28,8 +28,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-8">
+    <div className="min-h-screen bg-[#131313] flex items-center justify-center px-4">
+      <div className="w-full max-w-sm bg-[#1e1e1e]/70 backdrop-blur-2xl rounded-xl border border-[#C3C0FF]/10 p-8 shadow-[0_40px_60px_rgba(79,70,229,0.06)]">
         <h1 className="text-2xl font-bold text-white mb-6">Sign in to VlipGo</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
@@ -58,7 +58,7 @@ export function LoginPage() {
         </form>
         <p className="mt-6 text-sm text-center text-gray-500">
           No account?{" "}
-          <Link to="/register" className="text-blue-400 hover:underline font-medium">
+          <Link to="/register" className="text-[#C3C0FF] hover:underline font-medium">
             Create one
           </Link>
         </p>

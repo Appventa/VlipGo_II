@@ -12,7 +12,7 @@ function StatusIcon({ status }: { status: string }) {
   if (status === "DONE") return <CheckCircle2 className="text-green-500" size={20} />;
   if (status === "ERROR") return <AlertCircle className="text-red-500" size={20} />;
   if (status === "PREVIEW_READY") return <PlayCircle className="text-amber-500" size={20} />;
-  if (status === "RENDERING") return <Loader2 className="text-blue-500 animate-spin" size={20} />;
+  if (status === "RENDERING") return <Loader2 className="text-indigo-400 animate-spin" size={20} />;
   return <Clock className="text-gray-400" size={20} />;
 }
 
@@ -70,11 +70,11 @@ export function OrderDetailPage() {
 
         {/* Status card */}
         <div className={cn(
-          "rounded-xl border p-6 mb-6",
-          isDone ? "bg-green-500/10 border-green-500/30" :
-          isError ? "bg-red-500/10 border-red-500/30" :
-          isPreviewReady ? "bg-amber-500/10 border-amber-500/30" :
-          "bg-[#1a1a1a] border-white/[0.08]"
+          "rounded-xl p-6 mb-6",
+          isDone ? "bg-green-500/10" :
+          isError ? "bg-red-500/10" :
+          isPreviewReady ? "bg-amber-500/10" :
+          "bg-[#1e1e1e]"
         )}>
           <div className="flex items-center justify-between mb-4">
             <span className="font-semibold text-gray-300">Render Status</span>
@@ -83,7 +83,7 @@ export function OrderDetailPage() {
               isDone ? "bg-green-500/20 text-green-400" :
               isError ? "bg-red-500/20 text-red-400" :
               isPreviewReady ? "bg-amber-500/20 text-amber-400" :
-              isRendering ? "bg-blue-500/20 text-blue-400" :
+              isRendering ? "bg-indigo-500/20 text-[#C3C0FF]" :
               "bg-white/[0.08] text-gray-400"
             )}>
               {isPreviewReady ? "Preview Ready" : job.renderStatus}
@@ -97,9 +97,9 @@ export function OrderDetailPage() {
                 <span>{isRendering ? "Rendering…" : "Queued — waiting for renderer"}</span>
                 <span>{job.renderProgress}%</span>
               </div>
-              <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
+              <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-500"
                   style={{ width: `${job.renderProgress}%` }}
                 />
               </div>
@@ -121,7 +121,7 @@ export function OrderDetailPage() {
               <button
                 onClick={handleApprove}
                 disabled={approving}
-                className="flex items-center justify-center gap-2 w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:brightness-110 disabled:opacity-60 text-white font-semibold rounded-lg transition-all active:scale-[0.98]"
               >
                 {approving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
                 {approving ? "Submitting…" : "Looks good — Render Full HD"}
@@ -151,7 +151,7 @@ export function OrderDetailPage() {
 
         {/* What you submitted */}
         {job.assets.length > 0 && (
-          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-5">
+          <div className="bg-[#1e1e1e] rounded-xl p-5">
             <h2 className="font-semibold text-gray-300 mb-3">Your Customizations</h2>
             <ul className="flex flex-col gap-2 text-sm text-gray-400">
               {job.assets.map((a) => (
@@ -165,7 +165,7 @@ export function OrderDetailPage() {
         )}
 
         <div className="mt-6 text-center">
-          <Link to="/orders" className="text-sm text-blue-400 hover:underline">← All orders</Link>
+          <Link to="/orders" className="text-sm text-[#C3C0FF] hover:underline">← All orders</Link>
         </div>
       </div>
     </ShopLayout>

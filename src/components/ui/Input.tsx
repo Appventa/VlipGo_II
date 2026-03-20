@@ -17,11 +17,11 @@ export function Input({ label, error, className, id, ...props }: InputProps) {
       <input
         id={id}
         className={cn(
-          "block w-full rounded-lg border px-3 py-2 text-sm transition-colors text-white placeholder:text-gray-600",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+          "block w-full rounded-lg px-3 py-2 text-sm transition-all text-white placeholder:text-gray-600",
+          "focus:outline-none focus:ring-1 focus:ring-[#C3C0FF]/40",
           error
-            ? "border-red-500 bg-red-950/30"
-            : "border-white/[0.12] bg-[#1a1a1a]",
+            ? "bg-red-950/40 ring-1 ring-red-500/50"
+            : "bg-[#262626]",
           className
         )}
         {...props}

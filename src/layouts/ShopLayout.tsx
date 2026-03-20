@@ -15,19 +15,19 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f]">
-      <header className="bg-[#141414] border-b border-white/[0.06] sticky top-0 z-10">
+    <div className="min-h-screen bg-[#131313]">
+      <header className="bg-[#191919]/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="text-xl font-bold tracking-tight text-white">
-            Vlip<span className="text-blue-500">Go</span>
+            Vlip<span className="text-[#C3C0FF]">Go</span>
           </Link>
           <nav className="flex items-center gap-4">
-            <Link to="/templates" className="text-sm text-gray-400 hover:text-white transition-colors">Templates</Link>
+            <Link to="/templates" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors">Templates</Link>
             {user ? (
               <>
-                <Link to="/orders" className="text-sm text-gray-400 hover:text-white transition-colors">My Orders</Link>
+                <Link to="/orders" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors">My Orders</Link>
                 {user.role === "ADMIN" && (
-                  <Link to="/admin" className="text-sm text-blue-400 font-medium hover:text-blue-300 transition-colors">Admin</Link>
+                  <Link to="/admin" className="text-sm text-[#C3C0FF] font-medium hover:brightness-110 transition-colors">Admin</Link>
                 )}
                 <Button variant="ghost" size="sm" onClick={handleSignOut}>Sign out</Button>
               </>

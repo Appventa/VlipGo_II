@@ -29,7 +29,7 @@ export function TemplateDetailPage() {
     <ShopLayout>
       <div className="max-w-3xl mx-auto">
         {/* Preview: video > thumbnail > placeholder */}
-        <div className="aspect-video bg-[#1a1a1a] rounded-xl overflow-hidden mb-8">
+        <div className="aspect-video bg-[#1e1e1e] rounded-xl overflow-hidden mb-8">
           {template.previewVideoUrl && ytId ? (
             <iframe
               src={`https://www.youtube.com/embed/${ytId}?controls=0&rel=0&modestbranding=1`}
@@ -48,13 +48,13 @@ export function TemplateDetailPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div>
-            <span className="inline-block text-xs bg-white/[0.08] text-gray-400 px-2 py-0.5 rounded-full mb-2">
+            <span className="inline-block text-xs bg-[#262626] text-gray-500 px-2 py-0.5 rounded-full mb-2">
               {template.category}
             </span>
             <h1 className="text-3xl font-bold text-white">{template.title}</h1>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <span className="text-3xl font-bold text-blue-400">
+            <span className="text-3xl font-bold text-[#C3C0FF]">
               {formatPrice(template.price, template.currency)}
             </span>
             <Link to={isAuthenticated ? `/templates/${template._id}/customize` : `/login`}>
@@ -68,12 +68,12 @@ export function TemplateDetailPage() {
         <p className="text-gray-400 leading-relaxed mb-6">{template.description}</p>
 
         {template.fields.length > 0 && (
-          <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/[0.08]">
+          <div className="bg-[#1e1e1e] rounded-xl p-6">
             <h2 className="font-semibold text-white mb-3">What you can customize</h2>
             <ul className="flex flex-col gap-2">
               {template.fields.map((f) => (
                 <li key={f._id} className="flex items-center gap-2 text-sm text-gray-400">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0" />
                   <span>{f.label}</span>
                   <span className="text-xs text-gray-600 ml-auto">{f.type}</span>
                 </li>

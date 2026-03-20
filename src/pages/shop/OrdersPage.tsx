@@ -9,8 +9,8 @@ import { cn } from "../../lib/utils";
 import { Play, Loader2, X } from "lucide-react";
 
 const statusColor: Record<string, string> = {
-  QUEUED: "bg-white/[0.08] text-gray-400",
-  RENDERING: "bg-blue-500/20 text-blue-400",
+  QUEUED: "bg-[#262626] text-gray-400",
+  RENDERING: "bg-indigo-500/20 text-[#C3C0FF]",
   PREVIEW_READY: "bg-amber-500/20 text-amber-400",
   DONE: "bg-green-500/20 text-green-400",
   ERROR: "bg-red-500/20 text-red-400",
@@ -71,7 +71,7 @@ export function OrdersPage() {
       ) : jobs.length === 0 ? (
         <div className="text-center py-20 text-gray-600">
           No orders yet.{" "}
-          <Link to="/templates" className="text-blue-400 hover:underline">Browse templates →</Link>
+          <Link to="/templates" className="text-[#C3C0FF] hover:underline">Browse templates →</Link>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -83,8 +83,8 @@ export function OrdersPage() {
               <div
                 key={job._id}
                 className={cn(
-                  "bg-[#1a1a1a] rounded-xl border p-4 transition-colors",
-                  isPreviewReady ? "border-amber-500/30" : "border-white/[0.08] hover:border-white/[0.14]"
+                  "bg-[#1e1e1e] rounded-xl p-4 transition-all",
+                  isPreviewReady ? "ring-1 ring-amber-500/30" : "hover:bg-[#222222]"
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -102,7 +102,7 @@ export function OrdersPage() {
                   {/* Right: badge + actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {job.renderStatus === "RENDERING" && (
-                      <span className="text-xs text-blue-400">{job.renderProgress}%</span>
+                      <span className="text-xs text-[#C3C0FF]">{job.renderProgress}%</span>
                     )}
                     <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", statusColor[job.renderStatus])}>
                       {statusLabel[job.renderStatus] ?? job.renderStatus}
@@ -112,7 +112,7 @@ export function OrdersPage() {
 
                 {/* Preview actions row */}
                 {isPreviewReady && (
-                  <div className="mt-3 pt-3 border-t border-amber-500/20 flex gap-2">
+                  <div className="mt-3 pt-3 border-t border-white/[0.06] flex gap-2">
                     {job.previewUrl && (
                       <button
                         onClick={() => setWatchUrl(job.previewUrl!)}
@@ -124,7 +124,7 @@ export function OrdersPage() {
                     <button
                       onClick={() => handleApprove(job._id)}
                       disabled={isApproving}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-white text-gray-900 hover:bg-gray-200 disabled:opacity-60 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 text-white hover:brightness-110 disabled:opacity-60 transition-all"
                     >
                       {isApproving ? <Loader2 size={14} className="animate-spin" /> : null}
                       {isApproving ? "Submitting…" : "Render HD →"}

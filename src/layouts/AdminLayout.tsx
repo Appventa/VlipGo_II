@@ -20,15 +20,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#0f0f0f]">
-      <aside className="w-56 bg-[#141414] border-r border-white/[0.06] text-white flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-white/[0.06]">
+    <div className="min-h-screen flex bg-[#131313]">
+      <aside className="w-56 bg-[#191919] text-white flex flex-col">
+        <div className="h-16 flex items-center px-6">
           <span className="font-bold text-lg tracking-tight">
-            Vlip<span className="text-blue-500">Go</span>
-            <span className="text-gray-500 text-sm font-normal ml-1.5">admin</span>
+            Vlip<span className="text-[#C3C0FF]">Go</span>
+            <span className="text-gray-600 text-sm font-normal ml-1.5">admin</span>
           </span>
         </div>
-        <nav className="flex-1 py-4">
+        <nav className="flex-1 py-3">
           {navItems.map(({ to, label, icon: Icon, exact }) => {
             const active = exact ? location.pathname === to : location.pathname.startsWith(to);
             return (
@@ -36,10 +36,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 key={to}
                 to={to}
                 className={cn(
-                  "flex items-center gap-3 px-6 py-3 text-sm transition-colors",
-                  active ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
+                  "flex items-center gap-3 px-6 py-3 text-sm transition-all relative",
+                  active
+                    ? "bg-indigo-600/15 text-[#C3C0FF]"
+                    : "text-gray-500 hover:bg-white/[0.04] hover:text-gray-200"
                 )}
               >
+                {active && <span className="absolute left-0 top-0 h-full w-0.5 bg-indigo-500 rounded-r" />}
                 <Icon size={16} />
                 {label}
               </Link>
@@ -48,7 +51,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </nav>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-6 py-4 text-sm text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors border-t border-white/[0.06]"
+          className="flex items-center gap-3 px-6 py-4 text-sm text-gray-600 hover:text-gray-200 hover:bg-white/[0.04] transition-colors"
         >
           <LogOut size={16} />
           Sign out

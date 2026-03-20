@@ -85,7 +85,7 @@ export function CustomizePage() {
     <ShopLayout>
       <div className="max-w-xl mx-auto">
         {template.previewVideoUrl && (
-          <div className="aspect-video bg-[#1a1a1a] rounded-xl overflow-hidden mb-6">
+          <div className="aspect-video bg-[#1e1e1e] rounded-xl overflow-hidden mb-6">
             {ytId ? (
               <iframe
                 src={`https://www.youtube.com/embed/${ytId}?controls=0&rel=0&modestbranding=1`}
@@ -105,7 +105,7 @@ export function CustomizePage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="bg-[#1a1a1a] rounded-xl border border-white/[0.08] p-6 flex flex-col gap-5">
+          <div className="bg-[#1e1e1e] rounded-xl p-6 flex flex-col gap-5">
             {template.fields.map((field) => (
               <div key={field._id}>
                 {field.type === "TEXT" && (
@@ -128,7 +128,7 @@ export function CustomizePage() {
                         type="color"
                         value={values[field._id] ?? "#000000"}
                         onChange={(e) => setValue(field._id, e.target.value)}
-                        className="h-10 w-16 rounded border border-white/[0.12] cursor-pointer bg-transparent"
+                        className="h-10 w-16 rounded cursor-pointer bg-[#262626]"
                       />
                       <span className="text-sm text-gray-400 font-mono">{values[field._id] ?? "#000000"}</span>
                     </div>
@@ -155,7 +155,7 @@ export function CustomizePage() {
                       }}
                       className="text-sm text-gray-400"
                     />
-                    {uploading[field._id] && <span className="text-xs text-blue-400">Uploading…</span>}
+                    {uploading[field._id] && <span className="text-xs text-[#C3C0FF]">Uploading…</span>}
                     {values[field._id] && !uploading[field._id] && (
                       <span className="text-xs text-green-400">✓ Image ready</span>
                     )}
@@ -167,12 +167,12 @@ export function CustomizePage() {
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <div className="bg-blue-600/10 rounded-xl border border-blue-500/20 p-4 flex items-center justify-between">
+          <div className="bg-indigo-600/10 rounded-xl border border-[#C3C0FF]/15 p-4 flex items-center justify-between">
             <div>
               <p className="font-semibold text-white">{template.title}</p>
               <p className="text-sm text-gray-400">One-time payment</p>
             </div>
-            <span className="text-2xl font-bold text-blue-400">
+            <span className="text-2xl font-bold text-[#C3C0FF]">
               {formatPrice(template.price, template.currency)}
             </span>
           </div>
