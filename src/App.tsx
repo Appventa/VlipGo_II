@@ -15,19 +15,10 @@ import { DashboardPage } from "./pages/shop/DashboardPage";
 
 // Admin pages
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
+import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
 import { AdminTemplatesPage } from "./pages/admin/AdminTemplatesPage";
 import { AdminNewTemplatePage } from "./pages/admin/AdminNewTemplatePage";
 import { AdminJobsPage } from "./pages/admin/AdminJobsPage";
-
-// Layouts
-import { AdminLayout } from "./layouts/AdminLayout";
-
-const AdminDashboard = () => (
-  <AdminLayout>
-    <h1 className="text-2xl font-bold text-white mb-2">Dashboard</h1>
-    <p className="text-gray-500">Welcome to VlipGo Admin.</p>
-  </AdminLayout>
-);
 
 /** Redirect logged-in users from `/` to `/dashboard` */
 function HomeRoute() {
@@ -56,7 +47,7 @@ export default function App() {
 
         {/* Admin */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboardPage /></ProtectedRoute>} />
         <Route path="/admin/templates" element={<ProtectedRoute requiredRole="ADMIN"><AdminTemplatesPage /></ProtectedRoute>} />
         <Route path="/admin/templates/new" element={<ProtectedRoute requiredRole="ADMIN"><AdminNewTemplatePage /></ProtectedRoute>} />
         <Route path="/admin/templates/:id/edit" element={<ProtectedRoute requiredRole="ADMIN"><AdminNewTemplatePage /></ProtectedRoute>} />

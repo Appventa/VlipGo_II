@@ -200,8 +200,44 @@ export const listAll = query({
       jobs.map(async (j) => {
         const template = await ctx.db.get(j.templateId);
         const owner = await ctx.db.get(j.userId);
-        return { ...j, templateTitle: template?.title ?? "?", ownerEmail: owner?.email ?? "?" };
+        let thumbnailUrl = template?.thumbnailUrl;
+        if (thumbnailUrl && !thumbnailUrl.startsWith("http")) {
+          thumbnailUrl = (await ctx.storage.getUrl(thumbnailUrl)) ?? undefined;
+        }
+        return {
+          ...j,
+          templateTitle: template?.title ?? "?",
+          templateThumbnailUrl: thumbnailUrl ?? null,
+          ownerEmail: owner?.email ?? "?",
+        };
       })
     );
+  },
+});
+
+export const getAdminStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthenticated");
+    const user = await ctx.db.get(userId);
+    if (user?.role !== "ADMIN") throw new Error("Forbidden");
+
+    const [allJobs, allTemplates, allUsers] = await Promise.all([
+      ctx.db.query("jobs").collect(),
+      ctx.db.query("templates").collect(),
+      ctx.db.query("users").collect(),
+    ]);
+
+    return {
+      totalJobs:          allJobs.length,
+      activeJobs:         allJobs.filter((j) => j.renderStatus === "QUEUED" || j.renderStatus === "RENDERING").length,
+      previewReady:       allJobs.filter((j) => j.renderStatus === "PREVIEW_READY").length,
+      completedJobs:      allJobs.filter((j) => j.renderStatus === "DONE").length,
+      errorJobs:          allJobs.filter((j) => j.renderStatus === "ERROR").length,
+      totalTemplates:     allTemplates.filter((t) => !t.isArchived).length,
+      publishedTemplates: allTemplates.filter((t) => t.isPublished && !t.isArchived).length,
+      totalCustomers:     allUsers.filter((u) => u.role === "CUSTOMER").length,
+    };
   },
 });
