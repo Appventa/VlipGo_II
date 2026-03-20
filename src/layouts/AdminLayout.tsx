@@ -1,12 +1,12 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { cn } from "../lib/utils";
-import { LayoutDashboard, FileVideo, Briefcase, LogOut } from "lucide-react";
+import { LayoutDashboard, FileVideo, Users, LogOut } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/templates", label: "Templates", icon: FileVideo },
-  { to: "/admin/jobs", label: "Jobs", icon: Briefcase },
+  { to: "/admin/users", label: "Users", icon: Users },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -9,6 +9,7 @@ export default defineSchema({
     role: v.union(v.literal("ADMIN"), v.literal("CUSTOMER")),
     email: v.string(),
     name: v.optional(v.string()),
+    status: v.optional(v.union(v.literal("ACTIVE"), v.literal("FROZEN"), v.literal("BANNED"))),
   }).index("by_email", ["email"]),
 
   templates: defineTable({
@@ -77,4 +78,14 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_template", ["userId", "templateId"]),
+
+  notifications: defineTable({
+    userId: v.id("users"),
+    title: v.string(),
+    body: v.string(),
+    isRead: v.boolean(),
+    type: v.union(v.literal("INFO"), v.literal("ACCOUNT_ACTION")),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_unread", ["userId", "isRead"]),
 });

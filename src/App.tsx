@@ -12,6 +12,7 @@ import { CustomizePage } from "./pages/shop/CustomizePage";
 import { OrdersPage } from "./pages/shop/OrdersPage";
 import { OrderDetailPage } from "./pages/shop/OrderDetailPage";
 import { DashboardPage } from "./pages/shop/DashboardPage";
+import { InboxPage } from "./pages/shop/InboxPage";
 
 // Admin pages
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
@@ -19,6 +20,7 @@ import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
 import { AdminTemplatesPage } from "./pages/admin/AdminTemplatesPage";
 import { AdminNewTemplatePage } from "./pages/admin/AdminNewTemplatePage";
 import { AdminJobsPage } from "./pages/admin/AdminJobsPage";
+import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 
 /** Redirect logged-in users from `/` to `/dashboard` */
 function HomeRoute() {
@@ -44,6 +46,7 @@ export default function App() {
         <Route path="/templates/:id/customize" element={<ProtectedRoute><CustomizePage /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/orders/:jobId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><InboxPage /></ProtectedRoute>} />
 
         {/* Admin */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -52,6 +55,7 @@ export default function App() {
         <Route path="/admin/templates/new" element={<ProtectedRoute requiredRole="ADMIN"><AdminNewTemplatePage /></ProtectedRoute>} />
         <Route path="/admin/templates/:id/edit" element={<ProtectedRoute requiredRole="ADMIN"><AdminNewTemplatePage /></ProtectedRoute>} />
         <Route path="/admin/jobs" element={<ProtectedRoute requiredRole="ADMIN"><AdminJobsPage /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute requiredRole="ADMIN"><AdminUsersPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

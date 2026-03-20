@@ -3,6 +3,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "../components/ui/Button";
+import { NotificationBell } from "../components/ui/NotificationBell";
 
 export function ShopLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuthActions();
@@ -30,6 +31,7 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
                 {user.role === "ADMIN" && (
                   <Link to="/admin" className="text-sm text-[#C3C0FF] font-medium hover:brightness-110 transition-colors px-2 py-1">Admin</Link>
                 )}
+                <NotificationBell />
                 <Button variant="ghost" size="sm" onClick={handleSignOut}>Sign out</Button>
               </>
             ) : (

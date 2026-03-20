@@ -13,6 +13,7 @@ import type * as favorites from "../favorites.js";
 import type * as http from "../http.js";
 import type * as jobs from "../jobs.js";
 import type * as nexrender from "../nexrender.js";
+import type * as notifications from "../notifications.js";
 import type * as templates from "../templates.js";
 import type * as users from "../users.js";
 
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   jobs: typeof jobs;
   nexrender: typeof nexrender;
+  notifications: typeof notifications;
   templates: typeof templates;
   users: typeof users;
 }>;
