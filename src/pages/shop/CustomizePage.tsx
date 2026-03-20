@@ -12,7 +12,7 @@ import { formatPrice, cn } from "../../lib/utils";
 import {
   ArrowLeft, ArrowRight, Maximize2,
   Type, FileImage, Palette,
-  CheckCircle2, UploadCloud, Pencil,
+  CheckCircle2, UploadCloud, Pencil, Coins,
 } from "lucide-react";
 
 interface CropTarget {
@@ -36,6 +36,7 @@ export function CustomizePage() {
   const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [noCredits, setNoCredits] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Clean up object URLs on unmount
@@ -127,7 +128,12 @@ export function CustomizePage() {
       });
       navigate(`/orders/${jobId}`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create job");
+      const msg = err instanceof Error ? err.message : "Failed to create job";
+      if (msg.includes("INSUFFICIENT_CREDITS")) {
+        setNoCredits(true);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -135,6 +141,37 @@ export function CustomizePage() {
 
   return (
     <ShopLayout>
+      {/* ── Insufficient credits modal ── */}
+      {noCredits && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#1e1e1e] rounded-2xl p-7 w-full max-w-sm shadow-[0_40px_60px_rgba(0,0,0,0.5)] border border-[#2a2a2a] text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+              <Coins size={26} className="text-amber-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Not enough credits</h3>
+            <p className="text-sm text-gray-500 leading-relaxed mb-6">
+              You need at least <span className="text-white font-semibold">1 credit</span> to start a preview render.
+              Purchase a credits package to continue.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Link
+                to="/profile#credits"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-b from-indigo-500 to-indigo-600 hover:brightness-110 active:scale-[0.98] text-sm font-semibold text-white transition-all"
+                onClick={() => setNoCredits(false)}
+              >
+                <Coins size={14} /> Buy Credits
+              </Link>
+              <button
+                onClick={() => setNoCredits(false)}
+                className="w-full py-2.5 rounded-xl text-sm text-gray-500 hover:text-gray-300 hover:bg-[#262626] transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Crop modal — rendered at root level, above everything */}
       {cropTarget && (
         <ImageCropModal

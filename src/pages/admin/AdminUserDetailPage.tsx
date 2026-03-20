@@ -5,11 +5,12 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/ui/Loading";
+import { UserAvatar } from "../../components/ui/UserAvatar";
 import { cn } from "../../lib/utils";
 import {
   ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Film,
   Type, Palette, Image as ImageIcon, CheckCircle2, Snowflake,
-  ShieldBan, MessageSquare, Send, X, RotateCcw,
+  ShieldBan, MessageSquare, Send, X, RotateCcw, Coins, Plus, Minus,
 } from "lucide-react";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -45,16 +46,22 @@ export function AdminUserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
   const user    = useQuery(api.users.getAdminUserDetail, { userId: userId as Id<"users"> });
   const jobs    = useQuery(api.jobs.getJobsForAdminUser, { userId: userId as Id<"users"> });
-  const setStatus = useMutation(api.users.setUserStatus);
-  const sendMsg   = useMutation(api.notifications.send);
-  const retry     = useMutation(api.jobs.retryRender);
+  const setStatus       = useMutation(api.users.setUserStatus);
+  const sendMsg         = useMutation(api.notifications.send);
+  const retry           = useMutation(api.jobs.retryRender);
+  const adjustCredits   = useMutation(api.users.adminAdjustCredits);
+  const setCredits      = useMutation(api.users.adminSetCredits);
 
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [panel, setPanel]       = useState<ActionPanel | null>(null);
-  const [reason, setReason]     = useState("");
-  const [msgTitle, setMsgTitle] = useState("");
-  const [msgBody, setMsgBody]   = useState("");
-  const [sending, setSending]   = useState(false);
+  const [expanded, setExpanded]         = useState<Set<string>>(new Set());
+  const [panel, setPanel]               = useState<ActionPanel | null>(null);
+  const [reason, setReason]             = useState("");
+  const [msgTitle, setMsgTitle]         = useState("");
+  const [msgBody, setMsgBody]           = useState("");
+  const [sending, setSending]           = useState(false);
+  const [creditDelta, setCreditDelta]   = useState("");
+  const [creditNote, setCreditNote]     = useState("");
+  const [creditSet, setCreditSet]       = useState("");
+  const [creditSaving, setCreditSaving] = useState(false);
 
   function toggleJob(id: string) {
     setExpanded((prev) => {
@@ -78,6 +85,23 @@ export function AdminUserDetailPage() {
     await sendMsg({ userId: userId as Id<"users">, title: msgTitle.trim(), body: msgBody.trim() });
     setSending(false);
     setPanel(null);
+  }
+
+  async function handleAdjust(delta: number) {
+    if (!userId || delta === 0) return;
+    setCreditSaving(true);
+    await adjustCredits({ userId: userId as Id<"users">, delta, note: creditNote.trim() || undefined });
+    setCreditDelta("");
+    setCreditNote("");
+    setCreditSaving(false);
+  }
+
+  async function handleSetCredits() {
+    if (!userId || creditSet === "") return;
+    setCreditSaving(true);
+    await setCredits({ userId: userId as Id<"users">, credits: parseInt(creditSet) });
+    setCreditSet("");
+    setCreditSaving(false);
   }
 
   if (user === undefined || jobs === undefined) return <AdminLayout><Loading /></AdminLayout>;
@@ -112,7 +136,9 @@ export function AdminUserDetailPage() {
 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
-        <div>
+        <div className="flex items-center gap-4">
+          <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />
+          <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-bold text-white">{user.name ?? "—"}</h1>
             <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", userMeta.color)}>
@@ -123,6 +149,7 @@ export function AdminUserDetailPage() {
           <p className="text-xs text-gray-700 mt-1">
             Joined {new Date(user._creationTime).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
           </p>
+          </div>
         </div>
 
         {/* Action buttons */}
@@ -168,6 +195,83 @@ export function AdminUserDetailPage() {
             <p className="text-xs text-gray-600">{label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Credits management */}
+      <div className="bg-[#1e1e1e] rounded-2xl p-5 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#C3C0FF]">Credits</p>
+          <div className={cn(
+            "flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold",
+            (user.credits ?? 0) === 0 ? "bg-red-500/15 text-red-400" : "bg-[#262626] text-white"
+          )}>
+            <Coins size={13} className={(user.credits ?? 0) === 0 ? "text-red-400" : "text-[#C3C0FF]"} />
+            {user.credits ?? 0} credits
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          {/* Add / deduct */}
+          <div className="bg-[#262626] rounded-xl p-4 flex flex-col gap-3">
+            <p className="text-xs font-medium text-gray-500">Add / Deduct</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                placeholder="Amount"
+                value={creditDelta}
+                onChange={(e) => setCreditDelta(e.target.value)}
+                className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+              />
+              <button
+                onClick={() => handleAdjust(parseInt(creditDelta) || 0)}
+                disabled={creditSaving || !creditDelta}
+                title="Add credits"
+                className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 flex items-center justify-center transition-colors disabled:opacity-40"
+              >
+                <Plus size={14} />
+              </button>
+              <button
+                onClick={() => handleAdjust(-(parseInt(creditDelta) || 0))}
+                disabled={creditSaving || !creditDelta}
+                title="Deduct credits"
+                className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-colors disabled:opacity-40"
+              >
+                <Minus size={14} />
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder="Note (optional, shown to user)"
+              value={creditNote}
+              onChange={(e) => setCreditNote(e.target.value)}
+              className="w-full bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+            />
+          </div>
+
+          {/* Set exact */}
+          <div className="bg-[#262626] rounded-xl p-4 flex flex-col gap-3">
+            <p className="text-xs font-medium text-gray-500">Set Exact Balance</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                placeholder="New balance"
+                value={creditSet}
+                onChange={(e) => setCreditSet(e.target.value)}
+                className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+              />
+              <button
+                onClick={handleSetCredits}
+                disabled={creditSaving || creditSet === ""}
+                className="px-3 py-2 rounded-lg bg-indigo-500/15 text-[#C3C0FF] text-xs font-semibold hover:bg-indigo-500/25 transition-colors disabled:opacity-40"
+              >
+                Set
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-700">Overwrites the balance without sending a notification.</p>
+          </div>
+        </div>
       </div>
 
       {/* Jobs */}

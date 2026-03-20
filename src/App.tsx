@@ -13,6 +13,7 @@ import { OrdersPage } from "./pages/shop/OrdersPage";
 import { OrderDetailPage } from "./pages/shop/OrderDetailPage";
 import { DashboardPage } from "./pages/shop/DashboardPage";
 import { InboxPage } from "./pages/shop/InboxPage";
+import { ProfilePage } from "./pages/shop/ProfilePage";
 
 // Admin pages
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/orders/:jobId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
         <Route path="/inbox" element={<ProtectedRoute><InboxPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
         {/* Admin */}
         <Route path="/admin/login" element={<AdminLoginPage />} />

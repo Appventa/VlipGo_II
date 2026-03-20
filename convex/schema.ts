@@ -10,6 +10,8 @@ export default defineSchema({
     email: v.string(),
     name: v.optional(v.string()),
     status: v.optional(v.union(v.literal("ACTIVE"), v.literal("FROZEN"), v.literal("BANNED"))),
+    avatarStorageId: v.optional(v.string()),
+    credits: v.optional(v.number()),
   }).index("by_email", ["email"]),
 
   templates: defineTable({

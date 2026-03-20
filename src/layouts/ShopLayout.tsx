@@ -1,13 +1,115 @@
+import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "../components/ui/Button";
 import { NotificationBell } from "../components/ui/NotificationBell";
+import { UserAvatar } from "../components/ui/UserAvatar";
+import { cn } from "../lib/utils";
+import { Coins, User, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
+
+// ── Credits chip ─────────────────────────────────────────────────
+
+function CreditsChip({ credits }: { credits: number }) {
+  const low = credits === 0;
+  const warn = credits > 0 && credits < 5;
+  return (
+    <Link
+      to="/profile"
+      title="Credits — click to top up"
+      className={cn(
+        "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors",
+        low
+          ? "bg-red-500/15 text-red-400 hover:bg-red-500/25"
+          : warn
+            ? "bg-amber-500/15 text-amber-400 hover:bg-amber-500/25"
+            : "bg-[#262626] text-gray-300 hover:bg-[#2e2e2e]"
+      )}
+    >
+      <Coins size={12} className={low ? "text-red-400" : warn ? "text-amber-400" : "text-[#C3C0FF]"} />
+      {credits}
+    </Link>
+  );
+}
+
+// ── User dropdown ─────────────────────────────────────────────────
+
+interface UserMenuProps {
+  name?: string | null;
+  avatarUrl?: string | null;
+  isAdmin?: boolean;
+  onSignOut: () => void;
+}
+
+function UserMenu({ name, avatarUrl, isAdmin, onSignOut }: UserMenuProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1 rounded-full focus:outline-none hover:ring-2 hover:ring-[#C3C0FF]/20 transition-all"
+      >
+        <UserAvatar name={name} avatarUrl={avatarUrl} size="sm" />
+        <ChevronDown
+          size={11}
+          className={cn("text-gray-500 transition-transform duration-150 ml-0.5", open && "rotate-180")}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-44 bg-[#1e1e1e] rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] border border-[#2a2a2a] overflow-hidden z-50">
+          {name && (
+            <div className="px-3 py-2.5 border-b border-[#2a2a2a]">
+              <p className="text-xs font-semibold text-white truncate">{name}</p>
+            </div>
+          )}
+          <div className="py-1">
+            <Link
+              to="/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-[#262626] transition-colors"
+            >
+              <User size={13} /> My Profile
+            </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#C3C0FF] hover:bg-indigo-500/10 transition-colors"
+              >
+                <ShieldCheck size={13} /> Admin Panel
+              </Link>
+            )}
+            <div className="border-t border-[#2a2a2a] my-1" />
+            <button
+              onClick={() => { setOpen(false); onSignOut(); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            >
+              <LogOut size={13} /> Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Layout ────────────────────────────────────────────────────────
 
 export function ShopLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuthActions();
-  const user = useQuery(api.users.currentUser);
+  const profile = useQuery(api.users.getProfile);
   const navigate = useNavigate();
 
   async function handleSignOut() {
@@ -22,17 +124,23 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
           <Link to="/">
             <img src="/logo.png" alt="VlipGo" className="h-8 w-auto" draggable={false} />
           </Link>
-          <nav className="flex items-center gap-1 sm:gap-4">
-            {user ? (
+
+          <nav className="flex items-center gap-1 sm:gap-3">
+            {profile ? (
               <>
-                <Link to="/dashboard" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">Dashboard</Link>
-                <Link to="/templates" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">Templates</Link>
-                <Link to="/orders" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">My Orders</Link>
-                {user.role === "ADMIN" && (
-                  <Link to="/admin" className="text-sm text-[#C3C0FF] font-medium hover:brightness-110 transition-colors px-2 py-1">Admin</Link>
-                )}
-                <NotificationBell />
-                <Button variant="ghost" size="sm" onClick={handleSignOut}>Sign out</Button>
+                <Link to="/dashboard" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1 hidden sm:block">Dashboard</Link>
+                <Link to="/templates" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1 hidden sm:block">Templates</Link>
+                <Link to="/orders" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1 hidden sm:block">My Orders</Link>
+                <div className="flex items-center gap-2 ml-1">
+                  <CreditsChip credits={profile.credits ?? 0} />
+                  <NotificationBell />
+                  <UserMenu
+                    name={profile.name}
+                    avatarUrl={profile.avatarUrl}
+                    isAdmin={profile.role === "ADMIN"}
+                    onSignOut={handleSignOut}
+                  />
+                </div>
               </>
             ) : (
               <div className="flex items-center gap-2">

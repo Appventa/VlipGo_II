@@ -33,6 +33,12 @@ export const create = mutation({
       throw new Error("Template not available");
     }
 
+    // ── Credits: 1 credit required to start preview render ──
+    const user = await ctx.db.get(userId);
+    const userCredits = user?.credits ?? 0;
+    if (userCredits < 1) throw new Error("INSUFFICIENT_CREDITS");
+    await ctx.db.patch(userId, { credits: userCredits - 1 });
+
     // DEV: skip Stripe — mark PAID immediately
     const jobId = await ctx.db.insert("jobs", {
       userId,
@@ -67,6 +73,18 @@ export const approvePreview = mutation({
     if (!job) throw new Error("Job not found");
     if (job.userId !== userId && user?.role !== "ADMIN") throw new Error("Forbidden");
     if (job.renderStatus !== "PREVIEW_READY") throw new Error("Job is not in preview state");
+
+    // ── Credits: deduct remaining (price - 1) for HD render ──
+    const template = await ctx.db.get(job.templateId);
+    const totalCredits = Math.round((template?.price ?? 0) / 100);
+    const remainingCost = Math.max(0, totalCredits - 1);
+    if (remainingCost > 0) {
+      // Resolve actual job owner (admin may approve on behalf of user)
+      const jobOwner = await ctx.db.get(job.userId);
+      const ownerCredits = jobOwner?.credits ?? 0;
+      if (ownerCredits < remainingCost) throw new Error("INSUFFICIENT_CREDITS");
+      await ctx.db.patch(job.userId, { credits: ownerCredits - remainingCost });
+    }
 
     await ctx.db.patch(jobId, {
       renderStatus: "QUEUED",
