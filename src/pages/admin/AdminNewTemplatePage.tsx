@@ -16,6 +16,8 @@ interface FieldDraft {
   nexrenderLayer: string;
   required: boolean;
   order: number;
+  maxLength?: number;
+  dimensions?: string;
 }
 
 function emptyField(order: number): FieldDraft {
@@ -103,6 +105,8 @@ export function AdminNewTemplatePage() {
       nexrenderLayer: f.nexrenderLayer,
       required: f.required,
       order: f.order,
+      maxLength: f.maxLength,
+      dimensions: f.dimensions,
     })));
     setInitialized(true);
   }
@@ -153,7 +157,11 @@ export function AdminNewTemplatePage() {
         previewVideoUrl: previewVideoUrl || undefined,
         isPublished,
         thumbnailUrl: thumbnailStorageId || undefined,
-        fields,
+        fields: fields.map((f) => ({
+          ...f,
+          maxLength: f.maxLength || undefined,
+          dimensions: f.dimensions?.trim() || undefined,
+        })),
       });
       navigate("/admin/templates");
     } catch (err: unknown) {
@@ -397,7 +405,7 @@ export function AdminNewTemplatePage() {
                     />
                     <select
                       value={f.type}
-                      onChange={(e) => updateField(i, { type: e.target.value as FieldType })}
+                      onChange={(e) => updateField(i, { type: e.target.value as FieldType, maxLength: undefined, dimensions: undefined })}
                       className={cn("bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 border", FIELD_TYPE_COLOR[f.type])}
                     >
                       <option value="TEXT">TEXT</option>
@@ -414,6 +422,36 @@ export function AdminNewTemplatePage() {
                       <input type="checkbox" checked={f.required} onChange={(e) => updateField(i, { required: e.target.checked })} className="hidden" />
                       Required
                     </label>
+
+                    {/* TEXT: max length */}
+                    {f.type === "TEXT" && (
+                      <div className="col-span-2 flex items-center gap-2">
+                        <span className="text-xs text-gray-600 shrink-0">Max chars:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="9999"
+                          placeholder="e.g. 100 (optional)"
+                          value={f.maxLength ?? ""}
+                          onChange={(e) => updateField(i, { maxLength: e.target.value ? parseInt(e.target.value) : undefined })}
+                          className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+                        />
+                      </div>
+                    )}
+
+                    {/* IMAGE: dimensions */}
+                    {f.type === "IMAGE" && (
+                      <div className="col-span-2 flex items-center gap-2">
+                        <span className="text-xs text-gray-600 shrink-0">Dimensions:</span>
+                        <input
+                          type="text"
+                          placeholder="e.g. 1280x720 (optional)"
+                          value={f.dimensions ?? ""}
+                          onChange={(e) => updateField(i, { dimensions: e.target.value })}
+                          className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+                        />
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"

@@ -156,6 +156,8 @@ export const upsert = mutation({
         nexrenderLayer: v.string(),
         required: v.boolean(),
         order: v.number(),
+        maxLength: v.optional(v.number()),
+        dimensions: v.optional(v.string()),
       })
     ),
   },

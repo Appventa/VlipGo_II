@@ -38,6 +38,8 @@ export default defineSchema({
     nexrenderLayer: v.string(),
     required: v.boolean(),
     order: v.number(),
+    maxLength: v.optional(v.number()),   // TEXT: max character count
+    dimensions: v.optional(v.string()), // IMAGE: required size e.g. "1280x720"
   }).index("by_template", ["templateId"]),
 
   jobs: defineTable({

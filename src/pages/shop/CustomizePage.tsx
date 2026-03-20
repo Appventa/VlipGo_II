@@ -198,10 +198,29 @@ export function CustomizePage() {
                     <Input
                       id={field._id}
                       value={values[field._id] ?? ""}
-                      onChange={(e) => setValue(field._id, e.target.value)}
+                      onChange={(e) => {
+                        const v = field.maxLength
+                          ? e.target.value.slice(0, field.maxLength)
+                          : e.target.value;
+                        setValue(field._id, v);
+                      }}
                       required={field.required}
                       placeholder={`Enter ${field.label.toLowerCase()}…`}
                     />
+                    {field.maxLength && (() => {
+                      const len = (values[field._id] ?? "").length;
+                      const remaining = field.maxLength - len;
+                      return (
+                        <p className={cn(
+                          "text-xs text-right tabular-nums",
+                          remaining <= 0 ? "text-red-400" :
+                          remaining <= Math.ceil(field.maxLength * 0.15) ? "text-amber-400" :
+                          "text-gray-600"
+                        )}>
+                          {len} / {field.maxLength}
+                        </p>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -261,6 +280,11 @@ export function CustomizePage() {
                           <CheckCircle2 size={22} className="text-green-400" />
                           <p className="text-xs text-green-400 font-medium">Image ready</p>
                           <p className="text-xs text-gray-600">Click to replace</p>
+                          {field.dimensions && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#C3C0FF]/10 text-[#C3C0FF] text-xs font-medium">
+                              {field.dimensions.replace("x", " × ")} px
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>
@@ -269,7 +293,13 @@ export function CustomizePage() {
                             Drop your file or{" "}
                             <span className="text-[#C3C0FF]">Browse</span>
                           </p>
-                          <p className="text-xs text-gray-600">PNG, JPG, WEBP — max 10MB</p>
+                          {field.dimensions ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#C3C0FF]/10 text-[#C3C0FF] text-xs font-medium">
+                              Required: {field.dimensions.replace("x", " × ")} px
+                            </span>
+                          ) : (
+                            <p className="text-xs text-gray-600">PNG, JPG, WEBP — max 10MB</p>
+                          )}
                         </>
                       )}
                       <input
