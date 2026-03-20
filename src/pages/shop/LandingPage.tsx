@@ -63,7 +63,7 @@ export function LandingPage() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-600/10 rounded-full blur-[120px]" />
         </div>
 
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center relative">
           {/* Left: copy */}
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#C3C0FF] bg-indigo-600/15 border border-[#C3C0FF]/20 px-3 py-1 rounded-full mb-5">

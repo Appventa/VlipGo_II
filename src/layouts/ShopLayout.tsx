@@ -16,10 +16,10 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#131313] flex flex-col">
-      <header className="bg-[#191919]/80 backdrop-blur-xl sticky top-0 z-10">
+      <header className="bg-[#191919]/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold tracking-tight text-white">
-            Vlip<span className="text-[#C3C0FF]">Go</span>
+          <Link to="/">
+            <img src="/logo.png" alt="VlipGo" className="h-8 w-auto" draggable={false} />
           </Link>
           <nav className="flex items-center gap-1 sm:gap-4">
             <Link to="/templates" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1">Templates</Link>
@@ -47,8 +47,8 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
 
       <footer className="bg-[#191919]/60 border-t border-white/[0.04] mt-8">
         <div className="max-w-6xl mx-auto px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <Link to="/" className="text-lg font-bold tracking-tight text-white">
-            Vlip<span className="text-[#C3C0FF]">Go</span>
+          <Link to="/">
+            <img src="/logo.png" alt="VlipGo" className="h-7 w-auto opacity-80" draggable={false} />
           </Link>
           <div className="flex flex-wrap gap-6 text-sm text-gray-600">
             <Link to="/templates" className="hover:text-gray-400 transition-colors">Templates</Link>
