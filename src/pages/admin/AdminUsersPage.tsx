@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { Link } from "react-router-dom";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/ui/Loading";
 import { cn } from "../../lib/utils";
-import { ShieldBan, Snowflake, CheckCircle2, Users, MessageSquare, Send, X } from "lucide-react";
+import { ShieldBan, Snowflake, CheckCircle2, Users, MessageSquare, Send, X, ArrowRight } from "lucide-react";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   ACTIVE:  { label: "Active",  color: "bg-green-500/20 text-green-400"  },
@@ -136,8 +137,10 @@ export function AdminUsersPage() {
                   >
                     {/* User */}
                     <td className="px-5 py-3.5">
-                      <p className="font-medium text-white">{user.name ?? "—"}</p>
-                      <p className="text-xs text-gray-600 mt-0.5">{user.email}</p>
+                      <Link to={`/admin/users/${user._id}`} className="group">
+                        <p className="font-medium text-white group-hover:text-[#C3C0FF] transition-colors">{user.name ?? "—"}</p>
+                        <p className="text-xs text-gray-600 mt-0.5">{user.email}</p>
+                      </Link>
                     </td>
 
                     <td className="px-5 py-3.5 text-gray-500 text-xs">{joinedDate(user._creationTime)}</td>
@@ -161,6 +164,14 @@ export function AdminUsersPage() {
                     {/* Actions */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center justify-end gap-1">
+                        {/* View detail */}
+                        <Link
+                          to={`/admin/users/${user._id}`}
+                          title="View user detail"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-gray-200 hover:bg-[#333] transition-colors"
+                        >
+                          <ArrowRight size={13} />
+                        </Link>
                         {/* Message */}
                         <button
                           onClick={() => openMessage(user._id as Id<"users">, displayName)}

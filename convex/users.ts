@@ -36,14 +36,49 @@ export const listAllUsers = query({
         const lastActiveTs =
           jobs.length > 0 ? Math.max(...jobs.map((j) => j._creationTime)) : null;
 
+        const activeJobCount = jobs.filter(
+          (j) => j.renderStatus === "QUEUED" || j.renderStatus === "RENDERING"
+        ).length;
+
         return {
           ...user,
           jobCount: jobs.length,
           completedJobs,
+          activeJobCount,
           lastActiveTs,
         };
       })
     );
+  },
+});
+
+/** Admin: get a single user's profile + job stats (no full job list) */
+export const getAdminUserDetail = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const adminId = await getAuthUserId(ctx);
+    if (!adminId) return null;
+    const admin = await ctx.db.get(adminId);
+    if (admin?.role !== "ADMIN") return null;
+
+    const user = await ctx.db.get(userId);
+    if (!user) return null;
+
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    return {
+      ...user,
+      jobCount: jobs.length,
+      completedJobs: jobs.filter((j) => j.renderStatus === "DONE").length,
+      activeJobCount: jobs.filter(
+        (j) => j.renderStatus === "QUEUED" || j.renderStatus === "RENDERING"
+      ).length,
+      previewReady: jobs.filter((j) => j.renderStatus === "PREVIEW_READY").length,
+      errorJobs: jobs.filter((j) => j.renderStatus === "ERROR").length,
+    };
   },
 });
 

@@ -209,6 +209,62 @@ export const listAll = query({
           templateTitle: template?.title ?? "?",
           templateThumbnailUrl: thumbnailUrl ?? null,
           ownerEmail: owner?.email ?? "?",
+          ownerName: owner?.name ?? null,
+          ownerId: j.userId,
+        };
+      })
+    );
+  },
+});
+
+/** Admin: full job list for a specific user, including assets with resolved URLs */
+export const getJobsForAdminUser = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const adminId = await getAuthUserId(ctx);
+    if (!adminId) throw new Error("Unauthenticated");
+    const admin = await ctx.db.get(adminId);
+    if (admin?.role !== "ADMIN") throw new Error("Forbidden");
+
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .collect();
+
+    return Promise.all(
+      jobs.map(async (job) => {
+        const template = await ctx.db.get(job.templateId);
+        let thumbnailUrl = template?.thumbnailUrl;
+        if (thumbnailUrl && !thumbnailUrl.startsWith("http")) {
+          thumbnailUrl = (await ctx.storage.getUrl(thumbnailUrl)) ?? undefined;
+        }
+
+        const rawAssets = await ctx.db
+          .query("jobAssets")
+          .withIndex("by_job", (q) => q.eq("jobId", job._id))
+          .collect();
+
+        const assets = await Promise.all(
+          rawAssets.map(async (asset) => {
+            const field = await ctx.db.get(asset.fieldId);
+            let resolvedValue = asset.value;
+            if (field?.type === "IMAGE" && asset.value && !asset.value.startsWith("http")) {
+              resolvedValue = (await ctx.storage.getUrl(asset.value)) ?? asset.value;
+            }
+            return {
+              label: field?.label ?? "Unknown",
+              type: (field?.type ?? "TEXT") as "TEXT" | "IMAGE" | "COLOR",
+              value: resolvedValue,
+            };
+          })
+        );
+
+        return {
+          ...job,
+          templateTitle: template?.title ?? "?",
+          templateThumbnailUrl: thumbnailUrl ?? null,
+          assets,
         };
       })
     );
