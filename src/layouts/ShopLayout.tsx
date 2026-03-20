@@ -6,7 +6,7 @@ import { api } from "../../convex/_generated/api";
 import { Button } from "../components/ui/Button";
 import { NotificationBell } from "../components/ui/NotificationBell";
 import { UserAvatar } from "../components/ui/UserAvatar";
-import { CreditsModalProvider, useCreditsModal } from "../contexts/CreditsModalContext";
+import { useCreditsModal } from "../contexts/CreditsModalContext";
 import { cn } from "../lib/utils";
 import { Coins, User, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
 
@@ -186,9 +186,5 @@ function ShopLayoutInner({ children }: { children: React.ReactNode }) {
 }
 
 export function ShopLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <CreditsModalProvider>
-      <ShopLayoutInner>{children}</ShopLayoutInner>
-    </CreditsModalProvider>
-  );
+  return <ShopLayoutInner>{children}</ShopLayoutInner>;
 }

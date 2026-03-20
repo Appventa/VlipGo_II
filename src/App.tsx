@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useConvexAuth } from "convex/react";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { CreditsModalProvider } from "./contexts/CreditsModalContext";
 
 // Shop pages
 import { LandingPage } from "./pages/shop/LandingPage";
@@ -35,6 +36,7 @@ function HomeRoute() {
 
 export default function App() {
   return (
+    <CreditsModalProvider>
     <BrowserRouter>
       <Routes>
         {/* Public */}
@@ -66,5 +68,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </CreditsModalProvider>
   );
 }
