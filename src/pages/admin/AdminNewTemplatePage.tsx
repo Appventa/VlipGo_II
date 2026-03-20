@@ -7,10 +7,26 @@ import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/ui/Loading";
 import { cn } from "../../lib/utils";
 import { Plus, Trash2, GripVertical, Upload, X, ImageIcon } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type FieldType = "TEXT" | "IMAGE" | "COLOR";
 
 interface FieldDraft {
+  draftId: string; // stable key for sortable (never sent to backend)
   label: string;
   type: FieldType;
   nexrenderLayer: string;
@@ -20,8 +36,13 @@ interface FieldDraft {
   dimensions?: string;
 }
 
+let _draftCounter = 0;
+function newDraftId() {
+  return `draft-${++_draftCounter}-${Date.now()}`;
+}
+
 function emptyField(order: number): FieldDraft {
-  return { label: "", type: "TEXT", nexrenderLayer: "", required: true, order };
+  return { draftId: newDraftId(), label: "", type: "TEXT", nexrenderLayer: "", required: true, order };
 }
 
 const FIELD_TYPE_COLOR: Record<FieldType, string> = {
@@ -51,6 +72,136 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 const inputCls = "w-full bg-[#262626] rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 transition-all";
 const selectCls = `${inputCls} cursor-pointer`;
 
+// ── Sortable field card ─────────────────────────────────────────────────────
+
+interface SortableFieldCardProps {
+  field: FieldDraft;
+  index: number;
+  updateField: (i: number, patch: Partial<FieldDraft>) => void;
+  removeField: (i: number) => void;
+  totalFields: number;
+}
+
+function SortableFieldCard({ field, index, updateField, removeField, totalFields }: SortableFieldCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.draftId });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 20 : undefined,
+  };
+
+  const innerCls = cn(
+    "flex items-start gap-2.5 p-3.5 bg-[#262626] rounded-xl",
+    isDragging && "ring-1 ring-[#C3C0FF]/30 shadow-[0_8px_30px_rgba(0,0,0,0.4)] opacity-80"
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className={innerCls}>
+        {/* Drag handle */}
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          title="Drag to reorder"
+          className="mt-2.5 text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+        >
+          <GripVertical size={15} />
+        </button>
+
+        {/* Field inputs */}
+        <div className="flex-1 grid grid-cols-2 gap-2.5">
+          <input
+            placeholder="Label *"
+            value={field.label}
+            onChange={(e) => updateField(index, { label: e.target.value })}
+            className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+          />
+          <input
+            placeholder="AE Layer name *"
+            value={field.nexrenderLayer}
+            onChange={(e) => updateField(index, { nexrenderLayer: e.target.value })}
+            className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+          />
+          <select
+            value={field.type}
+            onChange={(e) => updateField(index, { type: e.target.value as FieldType, maxLength: undefined, dimensions: undefined })}
+            className={cn("bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 border", FIELD_TYPE_COLOR[field.type])}
+          >
+            <option value="TEXT">TEXT</option>
+            <option value="IMAGE">IMAGE</option>
+            <option value="COLOR">COLOR</option>
+          </select>
+          <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+            <div className={cn(
+              "w-4 h-4 rounded flex items-center justify-center shrink-0",
+              field.required ? "bg-indigo-500" : "bg-[#333] border border-white/10"
+            )}>
+              {field.required && <span className="text-white text-[9px] font-bold">✓</span>}
+            </div>
+            <input type="checkbox" checked={field.required} onChange={(e) => updateField(index, { required: e.target.checked })} className="hidden" />
+            Required
+          </label>
+
+          {/* TEXT: max length */}
+          {field.type === "TEXT" && (
+            <div className="col-span-2 flex items-center gap-2">
+              <span className="text-xs text-gray-600 shrink-0">Max chars:</span>
+              <input
+                type="number"
+                min="1"
+                max="9999"
+                placeholder="e.g. 100 (optional)"
+                value={field.maxLength ?? ""}
+                onChange={(e) => updateField(index, { maxLength: e.target.value ? parseInt(e.target.value) : undefined })}
+                className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+              />
+            </div>
+          )}
+
+          {/* IMAGE: dimensions */}
+          {field.type === "IMAGE" && (
+            <div className="col-span-2 flex items-center gap-2">
+              <span className="text-xs text-gray-600 shrink-0">Dimensions:</span>
+              <input
+                type="text"
+                placeholder="e.g. 1280x720 (optional)"
+                value={field.dimensions ?? ""}
+                onChange={(e) => updateField(index, { dimensions: e.target.value })}
+                className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+              />
+            </div>
+          )}
+
+          {/* Order badge */}
+          <div className="col-span-2 flex items-center gap-1.5">
+            <span className="text-[10px] text-gray-700">Position {index + 1} of {totalFields}</span>
+          </div>
+        </div>
+
+        {/* Delete button */}
+        <button
+          type="button"
+          onClick={() => removeField(index)}
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors mt-0.5 shrink-0"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ───────────────────────────────────────────────────────────────
+
 export function AdminNewTemplatePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -74,13 +225,17 @@ export function AdminNewTemplatePage() {
   const [finalComp, setFinalComp] = useState("");
   const [previewVideoUrl, setPreviewVideoUrl] = useState("");
   const [isPublished, setIsPublished] = useState(false);
-  const [thumbnailStorageId, setThumbnailStorageId] = useState(""); // raw ID sent to backend
-  const [thumbnailPreview, setThumbnailPreview] = useState(""); // URL for display
+  const [thumbnailStorageId, setThumbnailStorageId] = useState("");
+  const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [fields, setFields] = useState<FieldDraft[]>([emptyField(0)]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [initialized, setInitialized] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  );
 
   // Pre-fill form when editing
   if (id && existing && !initialized) {
@@ -96,25 +251,34 @@ export function AdminNewTemplatePage() {
     setFinalComp(existing.nexrenderFinalCompositionName ?? "");
     setPreviewVideoUrl(existing.previewVideoUrl ?? "");
     setIsPublished(existing.isPublished);
-    // thumbnailUrl is already resolved to http URL by getByIdAdmin
     setThumbnailStorageId(existing.thumbnailUrl ?? "");
     setThumbnailPreview(existing.thumbnailUrl ?? "");
-    setFields(existing.fields.map((f) => ({
+    setFields(existing.fields.map((f, idx) => ({
+      draftId: newDraftId(),
       label: f.label,
       type: f.type,
       nexrenderLayer: f.nexrenderLayer,
       required: f.required,
-      order: f.order,
+      order: f.order ?? idx,
       maxLength: f.maxLength,
       dimensions: f.dimensions,
     })));
     setInitialized(true);
   }
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setFields((prev) => {
+      const oldIndex = prev.findIndex((f) => f.draftId === active.id);
+      const newIndex = prev.findIndex((f) => f.draftId === over.id);
+      return arrayMove(prev, oldIndex, newIndex).map((f, idx) => ({ ...f, order: idx }));
+    });
+  }
+
   async function handleThumbnailUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Show local preview immediately
     setThumbnailPreview(URL.createObjectURL(file));
     setUploading(true);
     try {
@@ -158,7 +322,11 @@ export function AdminNewTemplatePage() {
         isPublished,
         thumbnailUrl: thumbnailStorageId || undefined,
         fields: fields.map((f) => ({
-          ...f,
+          label: f.label,
+          type: f.type,
+          nexrenderLayer: f.nexrenderLayer,
+          required: f.required,
+          order: f.order,
           maxLength: f.maxLength || undefined,
           dimensions: f.dimensions?.trim() || undefined,
         })),
@@ -241,7 +409,6 @@ export function AdminNewTemplatePage() {
             {/* ── Thumbnail ── */}
             <FieldRow label="Thumbnail">
               <div className="flex items-center gap-4">
-                {/* Preview box */}
                 <div className={cn(
                   "w-24 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center",
                   thumbnailPreview ? "bg-[#262626]" : "bg-[#262626] border-2 border-dashed border-white/10"
@@ -252,8 +419,6 @@ export function AdminNewTemplatePage() {
                     <ImageIcon size={18} className="text-gray-600" />
                   )}
                 </div>
-
-                {/* Upload controls */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
                     <button
@@ -278,14 +443,7 @@ export function AdminNewTemplatePage() {
                   </div>
                   <p className="text-xs text-gray-700">JPG, PNG or WebP. Recommended: 16:9 ratio.</p>
                 </div>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailUpload}
-                  className="hidden"
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
               </div>
             </FieldRow>
 
@@ -312,12 +470,7 @@ export function AdminNewTemplatePage() {
               )}>
                 {isPublished && <span className="text-white text-[10px] font-bold">✓</span>}
               </div>
-              <input
-                type="checkbox"
-                checked={isPublished}
-                onChange={(e) => setIsPublished(e.target.checked)}
-                className="hidden"
-              />
+              <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="hidden" />
               <div>
                 <p className={cn("text-sm font-medium", isPublished ? "text-green-400" : "text-gray-400")}>
                   Publish immediately
@@ -332,50 +485,25 @@ export function AdminNewTemplatePage() {
           {/* ── Nexrender Templates ── */}
           <SectionCard title="Nexrender Templates">
             <p className="text-xs text-gray-600 -mt-2">Two separate nexrender templates — LQ preview for customer approval, HQ final for delivery.</p>
-
-            {/* LQ Preview */}
             <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 p-4 flex flex-col gap-3">
               <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">LQ Preview</p>
               <div className="grid grid-cols-2 gap-3">
                 <FieldRow label="Nexrender Template ID *">
-                  <input
-                    value={previewId}
-                    onChange={(e) => setPreviewId(e.target.value)}
-                    required
-                    placeholder="e.g. 01KM17B27C6WY…"
-                    className={inputCls}
-                  />
+                  <input value={previewId} onChange={(e) => setPreviewId(e.target.value)} required placeholder="e.g. 01KM17B27C6WY…" className={inputCls} />
                 </FieldRow>
                 <FieldRow label="AE Composition Name">
-                  <input
-                    value={previewComp}
-                    onChange={(e) => setPreviewComp(e.target.value)}
-                    placeholder="e.g. TestCompHD_Preview"
-                    className={inputCls}
-                  />
+                  <input value={previewComp} onChange={(e) => setPreviewComp(e.target.value)} placeholder="e.g. TestCompHD_Preview" className={inputCls} />
                 </FieldRow>
               </div>
             </div>
-
-            {/* HQ Final */}
             <div className="rounded-xl bg-green-500/[0.06] border border-green-500/20 p-4 flex flex-col gap-3">
               <p className="text-xs font-semibold text-green-400 uppercase tracking-wider">HQ Final</p>
               <div className="grid grid-cols-2 gap-3">
                 <FieldRow label="Nexrender Template ID">
-                  <input
-                    value={finalId}
-                    onChange={(e) => setFinalId(e.target.value)}
-                    placeholder="e.g. 01KM17B27C6WY…"
-                    className={inputCls}
-                  />
+                  <input value={finalId} onChange={(e) => setFinalId(e.target.value)} placeholder="e.g. 01KM17B27C6WY…" className={inputCls} />
                 </FieldRow>
                 <FieldRow label="AE Composition Name">
-                  <input
-                    value={finalComp}
-                    onChange={(e) => setFinalComp(e.target.value)}
-                    placeholder="e.g. TestCompHD"
-                    className={inputCls}
-                  />
+                  <input value={finalComp} onChange={(e) => setFinalComp(e.target.value)} placeholder="e.g. TestCompHD" className={inputCls} />
                 </FieldRow>
               </div>
               {!finalId && (
@@ -387,81 +515,28 @@ export function AdminNewTemplatePage() {
           {/* ── Customization Fields ── */}
           <SectionCard title="Customization Fields">
             <div className="flex flex-col gap-2.5">
-              {fields.map((f, i) => (
-                <div key={i} className="flex items-start gap-2.5 p-3.5 bg-[#262626] rounded-xl">
-                  <GripVertical size={15} className="mt-2.5 text-gray-600 flex-shrink-0" />
-                  <div className="flex-1 grid grid-cols-2 gap-2.5">
-                    <input
-                      placeholder="Label *"
-                      value={f.label}
-                      onChange={(e) => updateField(i, { label: e.target.value })}
-                      className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={fields.map((f) => f.draftId)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {fields.map((f, i) => (
+                    <SortableFieldCard
+                      key={f.draftId}
+                      field={f}
+                      index={i}
+                      updateField={updateField}
+                      removeField={removeField}
+                      totalFields={fields.length}
                     />
-                    <input
-                      placeholder="AE Layer name *"
-                      value={f.nexrenderLayer}
-                      onChange={(e) => updateField(i, { nexrenderLayer: e.target.value })}
-                      className="bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
-                    />
-                    <select
-                      value={f.type}
-                      onChange={(e) => updateField(i, { type: e.target.value as FieldType, maxLength: undefined, dimensions: undefined })}
-                      className={cn("bg-[#1e1e1e] rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#C3C0FF]/40 border", FIELD_TYPE_COLOR[f.type])}
-                    >
-                      <option value="TEXT">TEXT</option>
-                      <option value="IMAGE">IMAGE</option>
-                      <option value="COLOR">COLOR</option>
-                    </select>
-                    <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
-                      <div className={cn(
-                        "w-4 h-4 rounded flex items-center justify-center shrink-0",
-                        f.required ? "bg-indigo-500" : "bg-[#333] border border-white/10"
-                      )}>
-                        {f.required && <span className="text-white text-[9px] font-bold">✓</span>}
-                      </div>
-                      <input type="checkbox" checked={f.required} onChange={(e) => updateField(i, { required: e.target.checked })} className="hidden" />
-                      Required
-                    </label>
+                  ))}
+                </SortableContext>
+              </DndContext>
 
-                    {/* TEXT: max length */}
-                    {f.type === "TEXT" && (
-                      <div className="col-span-2 flex items-center gap-2">
-                        <span className="text-xs text-gray-600 shrink-0">Max chars:</span>
-                        <input
-                          type="number"
-                          min="1"
-                          max="9999"
-                          placeholder="e.g. 100 (optional)"
-                          value={f.maxLength ?? ""}
-                          onChange={(e) => updateField(i, { maxLength: e.target.value ? parseInt(e.target.value) : undefined })}
-                          className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
-                        />
-                      </div>
-                    )}
-
-                    {/* IMAGE: dimensions */}
-                    {f.type === "IMAGE" && (
-                      <div className="col-span-2 flex items-center gap-2">
-                        <span className="text-xs text-gray-600 shrink-0">Dimensions:</span>
-                        <input
-                          type="text"
-                          placeholder="e.g. 1280x720 (optional)"
-                          value={f.dimensions ?? ""}
-                          onChange={(e) => updateField(i, { dimensions: e.target.value })}
-                          className="flex-1 bg-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-[#C3C0FF]/40"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeField(i)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors mt-0.5"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))}
               <button
                 type="button"
                 onClick={addField}
