@@ -217,6 +217,31 @@ export const archive = mutation({
   },
 });
 
+export const deletePermanently = mutation({
+  args: { templateId: v.id("templates") },
+  handler: async (ctx, { templateId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthenticated");
+    const user = await ctx.db.get(userId);
+    if (user?.role !== "ADMIN") throw new Error("Forbidden");
+    const template = await ctx.db.get(templateId);
+    if (!template) throw new Error("Not found");
+    if (!template.isArchived) throw new Error("Template must be archived before permanent deletion");
+    // Delete stored files (only storage IDs, not external URLs)
+    if (template.thumbnailUrl && !template.thumbnailUrl.startsWith("http")) {
+      await ctx.storage.delete(template.thumbnailUrl as any);
+    }
+    if (template.previewVideoUrl && !template.previewVideoUrl.startsWith("http")) {
+      await ctx.storage.delete(template.previewVideoUrl as any);
+    }
+    // Delete all template fields
+    const fields = await ctx.db.query("templateFields").withIndex("by_template", (q) => q.eq("templateId", templateId)).collect();
+    await Promise.all(fields.map((f) => ctx.db.delete(f._id)));
+    // Delete the template document
+    await ctx.db.delete(templateId);
+  },
+});
+
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {

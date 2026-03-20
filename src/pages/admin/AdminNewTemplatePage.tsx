@@ -523,7 +523,12 @@ export function AdminNewTemplatePage() {
               <input ref={videoFileInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
               {videoPreview ? (
                 <div className="flex flex-col gap-1.5">
-                  <video src={videoPreview} controls className="w-full rounded-xl bg-black" style={{ maxHeight: 180 }} />
+                  <div className={cn(
+                    "rounded-xl overflow-hidden bg-black self-start",
+                    orientation === "VERTICAL" ? "aspect-[9/16] w-[120px]" : "aspect-video w-full max-w-xs"
+                  )}>
+                    <video src={videoPreview} controls className="w-full h-full" />
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"

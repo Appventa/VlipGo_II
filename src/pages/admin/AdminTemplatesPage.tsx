@@ -5,15 +5,21 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/ui/Loading";
 import { formatPrice, cn } from "../../lib/utils";
-import { Plus, Pencil, Archive, ImageIcon, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Archive, ImageIcon, Eye, EyeOff, Trash2 } from "lucide-react";
 
 export function AdminTemplatesPage() {
   const templates = useQuery(api.templates.listAll);
-  const archive   = useMutation(api.templates.archive);
+  const archive         = useMutation(api.templates.archive);
+  const deletePermanent = useMutation(api.templates.deletePermanently);
 
   async function handleArchive(templateId: Id<"templates">, title: string) {
     if (!confirm(`Archive "${title}"? It will be hidden from customers.`)) return;
     await archive({ templateId });
+  }
+
+  async function handleDelete(templateId: Id<"templates">, title: string) {
+    if (!confirm(`Permanently delete "${title}"?\n\nThis will delete all stored files and fields. This cannot be undone.`)) return;
+    await deletePermanent({ templateId });
   }
 
   const published = templates?.filter((t) => t.isPublished && !t.isArchived) ?? [];
@@ -49,7 +55,7 @@ export function AdminTemplatesPage() {
             <TemplateGroup label="Drafts" count={drafts.length} templates={drafts} onArchive={handleArchive} />
           )}
           {archived.length > 0 && (
-            <TemplateGroup label="Archived" count={archived.length} templates={archived} onArchive={handleArchive} dimmed />
+            <TemplateGroup label="Archived" count={archived.length} templates={archived} onArchive={handleArchive} onDelete={handleDelete} dimmed />
           )}
         </div>
       )}
@@ -70,12 +76,13 @@ interface TemplateMeta {
 }
 
 function TemplateGroup({
-  label, count, templates, onArchive, dimmed,
+  label, count, templates, onArchive, onDelete, dimmed,
 }: {
   label: string;
   count: number;
   templates: TemplateMeta[];
   onArchive: (id: Id<"templates">, title: string) => void;
+  onDelete?: (id: Id<"templates">, title: string) => void;
   dimmed?: boolean;
 }) {
   const labelColor =
@@ -156,13 +163,21 @@ function TemplateGroup({
                     >
                       <Pencil size={13} />
                     </Link>
-                    {!t.isArchived && (
+                    {!t.isArchived ? (
                       <button
                         onClick={() => onArchive(t._id, t.title)}
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         title="Archive"
                       >
                         <Archive size={13} />
+                      </button>
+                    ) : onDelete && (
+                      <button
+                        onClick={() => onDelete(t._id, t.title)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                        title="Delete permanently"
+                      >
+                        <Trash2 size={13} />
                       </button>
                     )}
                   </div>
