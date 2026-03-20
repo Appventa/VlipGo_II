@@ -6,17 +6,20 @@ import { api } from "../../convex/_generated/api";
 import { Button } from "../components/ui/Button";
 import { NotificationBell } from "../components/ui/NotificationBell";
 import { UserAvatar } from "../components/ui/UserAvatar";
+import { CreditsModalProvider, useCreditsModal } from "../contexts/CreditsModalContext";
 import { cn } from "../lib/utils";
 import { Coins, User, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
 
 // ── Credits chip ─────────────────────────────────────────────────
 
 function CreditsChip({ credits }: { credits: number }) {
+  const { openBuyCredits } = useCreditsModal();
   const low = credits === 0;
   const warn = credits > 0 && credits < 5;
   return (
-    <Link
-      to="/profile"
+    <button
+      type="button"
+      onClick={openBuyCredits}
       title="Credits — click to top up"
       className={cn(
         "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors",
@@ -29,7 +32,7 @@ function CreditsChip({ credits }: { credits: number }) {
     >
       <Coins size={12} className={low ? "text-red-400" : warn ? "text-amber-400" : "text-[#C3C0FF]"} />
       {credits}
-    </Link>
+    </button>
   );
 }
 
@@ -107,7 +110,7 @@ function UserMenu({ name, avatarUrl, isAdmin, onSignOut }: UserMenuProps) {
 
 // ── Layout ────────────────────────────────────────────────────────
 
-export function ShopLayout({ children }: { children: React.ReactNode }) {
+function ShopLayoutInner({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuthActions();
   const profile = useQuery(api.users.getProfile);
   const navigate = useNavigate();
@@ -120,27 +123,36 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#131313] flex flex-col">
       <header className="bg-[#191919]/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 h-16 grid grid-cols-3 items-center">
+          {/* Left: Logo */}
           <Link to="/">
             <img src="/logo.png" alt="VlipGo" className="h-8 w-auto" draggable={false} />
           </Link>
 
-          <nav className="flex items-center gap-1 sm:gap-3">
-            {profile ? (
+          {/* Center: Dashboard + Templates */}
+          <div className="flex items-center justify-center gap-1">
+            {profile && (
               <>
                 <Link to="/dashboard" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1 hidden sm:block">Dashboard</Link>
                 <Link to="/templates" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1 hidden sm:block">Templates</Link>
+              </>
+            )}
+          </div>
+
+          {/* Right: My Orders + Bell | Credits + Avatar */}
+          <div className="flex items-center justify-end gap-2">
+            {profile ? (
+              <>
                 <Link to="/orders" className="text-sm text-gray-400 hover:text-[#C3C0FF] transition-colors px-2 py-1 hidden sm:block">My Orders</Link>
-                <div className="flex items-center gap-2 ml-1">
-                  <CreditsChip credits={profile.credits ?? 0} />
-                  <NotificationBell />
-                  <UserMenu
-                    name={profile.name}
-                    avatarUrl={profile.avatarUrl}
-                    isAdmin={profile.role === "ADMIN"}
-                    onSignOut={handleSignOut}
-                  />
-                </div>
+                <NotificationBell />
+                <div className="w-px h-4 bg-white/10 hidden sm:block mx-1" />
+                <CreditsChip credits={profile.credits ?? 0} />
+                <UserMenu
+                  name={profile.name}
+                  avatarUrl={profile.avatarUrl}
+                  isAdmin={profile.role === "ADMIN"}
+                  onSignOut={handleSignOut}
+                />
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -150,7 +162,7 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </div>
             )}
-          </nav>
+          </div>
         </div>
       </header>
 
@@ -170,5 +182,13 @@ export function ShopLayout({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
     </div>
+  );
+}
+
+export function ShopLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <CreditsModalProvider>
+      <ShopLayoutInner>{children}</ShopLayoutInner>
+    </CreditsModalProvider>
   );
 }
